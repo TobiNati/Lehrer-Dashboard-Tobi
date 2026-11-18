@@ -173,6 +173,8 @@ textarea.zg{min-height:140px}
 .imt td input:not([type]){min-width:120px;margin:0;padding:6px 8px}
 .imt td input[type=checkbox]{width:20px;height:20px;margin:10px 6px;accent-color:var(--ac)}
 .imt tr.off td{opacity:.45}
+.imt td input.bad{border-color:var(--bad);background:var(--badbg)}
+.bad-l{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--bad);background:var(--badbg);vertical-align:-1px}
 .imt th select{width:auto;min-width:130px;margin:0}
 .btns .btn{width:auto;margin:0}
 .btns.two{display:grid}
@@ -726,7 +728,7 @@ async function ocrImages(imgs){
  let cur=0;
  const w=await Tesseract.createWorker('deu',1,{logger:m=>{if(m.status==='recognizing text')imStat(`Texterkennung${imgs.length>1?' Seite '+(cur+1)+' von '+imgs.length:''}: ${Math.round(m.progress*100)} %`);else if(m.status)imStat('Texterkennung: '+m.status+' …')}});
  const words=[];
- try{for(cur=0;cur<imgs.length;cur++){const r=await w.recognize(imgs[cur]);(r.data.words||[]).forEach(x=>{if(x.confidence<10||!x.text.trim())return;const b=x.bbox;words.push({t:x.text.trim(),x0:b.x0,x1:b.x1,y:cur*1e5+(b.y0+b.y1)/2,h:b.y1-b.y0})})}}
+ try{for(cur=0;cur<imgs.length;cur++){const r=await w.recognize(imgs[cur]);(r.data.words||[]).forEach(x=>{if(x.confidence<10||!x.text.trim())return;const b=x.bbox;words.push({t:x.text.trim(),x0:b.x0,x1:b.x1,y:cur*1e5+(b.y0+b.y1)/2,h:b.y1-b.y0,lc:x.confidence<60})})}}
  finally{await w.terminate()}
  return words;
 }
@@ -736,7 +738,7 @@ function wordsToLines(ws,gap){
  ws=ws.slice().sort((a,b)=>a.y-b.y||a.x0-b.x0);const lines=[];
  ws.forEach(w=>{const l=lines[lines.length-1];if(l&&Math.abs(w.y-l.y)<Math.max(3,0.55*Math.min(w.h,l.h)))l.ws.push(w);else lines.push({y:w.y,h:w.h,ws:[w]})});
  return lines.map(l=>{l.ws.sort((a,b)=>a.x0-b.x0);const cells=[];let c=null;
-  l.ws.forEach(w=>{if(c&&w.x0-c.x1<gap*l.h){c.t+=' '+w.t;c.x1=w.x1}else{c={t:w.t,x0:w.x0,x1:w.x1};cells.push(c)}});
+  l.ws.forEach(w=>{if(c&&w.x0-c.x1<gap*l.h){c.t+=' '+w.t;c.x1=w.x1;c.lc=c.lc||w.lc}else{c={t:w.t,x0:w.x0,x1:w.x1,lc:w.lc};cells.push(c)}});
   return {cells:cells.map(c=>c.t),pos:cells,ws:l.ws,h:l.h}});
 }
 const imNorm=s=>String(s||'').toLowerCase().replace(/[.:]/g,'').trim();
@@ -767,11 +769,11 @@ function imBuild(src){
   if(map.includes('name')&&map.includes('vn'))map=map.map(f=>f==='name'?'nn':f);
   const body=lines.slice(hi+1).filter(l=>l.cells.join('|')!==H.cells.join('|')&&!(l.cells.filter(c=>headField(c)).length>=2));
   const bnd=H.pos?colBounds(H,body):null;
-  rows=body.map(l=>({cells:bnd&&l.ws?alignTo(bnd,l.ws):pad(l.cells,H.cells.length),hint:l.hint,y:l.ws?l.ws[0].y:null,h:l.h}));
+  rows=body.map(l=>{const a=bnd&&l.ws?alignTo(bnd,l.ws):pad(l.cells,H.cells.length);return {cells:a,lc:a.lc||[],hint:l.hint,y:l.ws?l.ws[0].y:null,h:l.h}});
   IM.head=H.cells;
  }else{
   const n=Math.max(...lines.map(l=>l.cells.length));
-  rows=lines.map(l=>({cells:pad(l.cells,n),hint:l.hint}));map=guessMap(rows,n);IM.head=null;
+  rows=lines.map(l=>({cells:pad(l.cells,n),lc:(l.pos||[]).map(c=>!!c.lc),hint:l.hint}));map=guessMap(rows,n);IM.head=null;
  }
  IM.rows=rows;IM.map=map;IM.hint=hint;
  imRecs();imPreview();
@@ -785,8 +787,9 @@ function colBounds(H,body){
 }
 function alignTo(b,ws){
  const out=Array.from({length:b.length+1},()=>[]);
- ws.forEach(w=>{let i=0;while(i<b.length&&w.x0>=b[i])i++;out[i].push(w.t)});
- return out.map(x=>x.join(' '));
+ const lc=out.map(()=>false);
+ ws.forEach(w=>{let i=0;while(i<b.length&&w.x0>=b[i])i++;out[i].push(w.t);if(w.lc)lc[i]=true});
+ const res=out.map(x=>x.join(' '));res.lc=lc;return res;
 }
 function guessMap(rows,n){
  const map=[],used={};
@@ -822,24 +825,26 @@ function splitName(s){
 function imRecs(){
  const recs=[],orph=[],m=IM.map;
  IM.rows.forEach(r=>{
-  const o={},add=(k,v,sep)=>{v=(v||'').trim();if(v)o[k]=o[k]?o[k]+(sep||', ')+v:v};
+  const o={},lc={},add=(k,v,sep)=>{v=(v||'').trim();if(v)o[k]=o[k]?o[k]+(sep||', ')+v:v};
   m.forEach((f,i)=>{const v=(r.cells[i]||'').trim();if(!f||!v)return;
+   if(r.lc&&r.lc[i])(f==='name'?['nn','vn']:['str','plz','ort','plzort'].includes(f)?['adr']:[f]).forEach(k=>lc[k]=1);
    if(f==='mail')add('mail',v.replace(/\s+/g,'').replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi,''),', ');else if(f==='name')Object.assign(o,splitName(v));else if(f==='tel')add('tel',v,' / ');else add(f,f==='nn'||f==='vn'?tCase(v):v,f==='nn'||f==='vn'?' ':', ')});
   const has=o.nn||o.vn,joined=r.cells.join(' ');
   if(!has){/* Fortsetzungszeile, z. B. umbrochene Adresse; gehört zur nächstgelegenen Schülerzeile */
-   if(Object.keys(o).length&&!RX.junk.test(joined))orph.push({o:o,y:r.y,after:recs.length});return}
+   if(Object.keys(o).length&&!RX.junk.test(joined))orph.push({o:o,lc:lc,y:r.y,after:recs.length});return}
   if(RX.junk.test(joined)||/\d/.test((o.nn||'')+(o.vn||'')))return;
   o.klasse=(o.klasse||r.hint||IM.hint||'').replace(/\s/g,'');
-  o._y=r.y;o._h=r.h;recs.push(o);
+  o._y=r.y;o._h=r.h;o._lc=lc;recs.push(o);
  });
  recs.forEach(o=>{if(o.betrieb)o.betrieb=o.betrieb.replace(/\s*\b(herr|frau)\.?$/i,'').trim()});
  orph.forEach(x=>{
   const a=recs[x.after-1],b=recs[x.after];let t=a,above=false;
   if(b&&x.y!=null&&b._y!=null&&(!a||Math.abs(b._y-x.y)<Math.abs(x.y-a._y)))t=b,above=true;
   if(!t)return;
+  Object.assign(t._lc,x.lc);
   Object.keys(x.o).forEach(k=>{const v=x.o[k],sep=' ';t[k]=t[k]?(above?v+sep+t[k]:t[k]+sep+v):v});
  });
- IM.recs=recs.map(o=>{const r={on:true};IMC.forEach(([k])=>r[k]=o[k]||'');return r});
+ IM.recs=recs.map(o=>{const r={on:true,lc:o._lc||{}};IMC.forEach(([k])=>r[k]=o[k]||'');return r});
  imDupes();
 }
 function imDupes(){IM.recs.forEach(r=>{const t=imTarget(r.klasse);r.dup=!!(t&&t.kid&&S.schueler.some(s=>s.klasse===t.kid&&s.nn.toLowerCase()===r.nn.toLowerCase()&&s.vn.toLowerCase()===r.vn.toLowerCase()));if(r.dup)r.on=false})}
@@ -849,17 +854,34 @@ function imTarget(g){
  if(!IM.tg[g]){const ex=IM.kid?kl(IM.kid):null;IM.tg[g]=ex?{kid:ex.id}:{kid:'',name:g||IM.hint||'',fach:S.set.faecher[0]||''}}
  return IM.tg[g];
 }
+/* Rot: von der Texterkennung unsicher gelesen, leer obwohl die Liste eine Spalte dafür hat, oder unplausibel */
+function imCheck(k,v,r){
+ v=(v||'').trim();if(r.lc&&r.lc[k])return true;
+ if(k==='nn'||k==='vn')return !v||/[\d@]/.test(v);
+ if(k==='klasse')return !v;
+ if(!v)return IM.map.some(f=>(k==='adr'?['str','plz','ort','plzort','adr']:[k]).includes(f));
+ if(k==='mail')return v.split(/\s*,\s*/).some(x=>!RX.mail.test(x));
+ if(k==='tel')return !/^[+(]?\d[\d\s\/()\-.]{3,}$/.test(v);
+ if(k==='geb')return !RX.date.test(v);
+ return false;
+}
+const imBadN=()=>IM.recs.filter(r=>r.on).reduce((n,r)=>n+IMC.filter(([k])=>imCheck(k,r[k],r)).length,0);
+function imCnt(){const e=$('#im_c');if(!e)return;const n=imBadN();e.innerHTML=n?`<span class="bad-l"></span> ${n} ${n===1?'Feld ist':'Felder sind'} rot markiert: nicht sicher gelesen, leer oder unplausibel. Bitte prüfen.`:'Alle Felder sehen plausibel aus.'}
+function imSet(i,k,el){const r=IM.recs[i];r[k]=el.value;if(r.lc)delete r.lc[k];el.classList.toggle('bad',imCheck(k,el.value,r));IM.force=false;imCnt()}
+const imErr=t=>{const e=$('#im_e');if(e)e.textContent=t};
 function imPreview(){
+ IM.force=false;
  const n=IM.recs.length;
  if(!n)return imStat('Keine Schüler erkannt. Über „Spalten zuordnen“ kannst du festlegen, welche Spalte was enthält.')||imMapView();
  modal(`<h2>Import prüfen <span class="sub">${n} Schüler erkannt</span></h2>
- <div class="sub">Felder antippen zum Korrigieren. Abgewählte Zeilen werden nicht übernommen.</div>
+ <div class="sub">Felder antippen zum Korrigieren. Abgewählte Zeilen werden nicht übernommen.</div><div class="sub" id="im_c" style="margin-top:4px"></div>
  <div class="acts" style="margin:10px 0"><button onclick="imMapView()">Spalten zuordnen</button><button onclick="imSwap()">Vor- und Nachname tauschen</button><button onclick="IM.recs.forEach(r=>r.on=!r.dup);imPreview()">Alle wählen</button></div>
  <div class="imt"><table><tr><th></th>${IMC.map(c=>`<th>${c[1]}</th>`).join('')}</tr>
- ${IM.recs.map((r,i)=>`<tr class="${r.on?'':'off'}"><td><input type="checkbox" ${r.on?'checked':''} onchange="IM.recs[${i}].on=this.checked;this.closest('tr').className=this.checked?'':'off'">${r.dup?'<div class="tag warn">schon da</div>':''}</td>${IMC.map(([k])=>`<td><input value="${esc(r[k])}" oninput="IM.recs[${i}].${k}=this.value"${k==='klasse'?' onchange="imDupes();imGroups()"':''}></td>`).join('')}</tr>`).join('')}</table></div>
+ ${IM.recs.map((r,i)=>`<tr class="${r.on?'':'off'}"><td><input type="checkbox" ${r.on?'checked':''} onchange="IM.recs[${i}].on=this.checked;this.closest('tr').className=this.checked?'':'off';imCnt()">${r.dup?'<div class="tag warn">schon da</div>':''}</td>${IMC.map(([k])=>`<td><input class="${imCheck(k,r[k],r)?'bad':''}" value="${esc(r[k])}" oninput="imSet(${i},'${k}',this)"${k==='klasse'?' onchange="imDupes();imGroups()"':''}></td>`).join('')}</tr>`).join('')}</table></div>
  <h3>Klassen</h3><div id="im_g"></div>
+ <div class="sub" id="im_e" style="color:var(--bad);margin-top:10px"></div>
  <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="imSave()">Anlegen</button></div>`,'wide');
- imGroups();
+ imGroups();imCnt();
 }
 function imGroups(){
  const fl=S.set.faecher;
@@ -878,8 +900,9 @@ function imMapView(){
 }
 function imSave(){
  const recs=IM.recs.filter(r=>r.on&&(r.nn.trim()||r.vn.trim()));
- if(!recs.length)return info('Keine Schüler ausgewählt.');
- for(const g of imGroupNames()){const t=imTarget(g);if(!t.kid&&recs.some(r=>r.klasse===g)&&!t.name.trim())return info('Bitte für jede neue Klasse einen Namen eingeben.')}
+ if(!recs.length)return imErr('Keine Schüler ausgewählt.');
+ for(const g of imGroupNames()){const t=imTarget(g);if(!t.kid&&recs.some(r=>r.klasse===g)&&!t.name.trim())return imErr('Bitte für jede neue Klasse einen Namen eingeben.')}
+ const nb=imBadN();if(nb&&!IM.force){IM.force=true;return imErr(nb+(nb===1?' Feld ist':' Felder sind')+' noch rot markiert. Tippe noch einmal auf „Anlegen“, um trotzdem anzulegen.')}
  const made={},touched=new Set();
  recs.forEach(r=>{const t=imTarget(r.klasse);let kid=t.kid;
   if(!kid){kid=made[r.klasse];if(!kid){kid=made[r.klasse]=uid();S.klassen.push({id:kid,name:t.name.trim(),fach:t.fach});S.sitz[kid]=[]}}
