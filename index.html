@@ -572,7 +572,7 @@ function vKlassen(){
 function vKlasse(k){
  const t=iso(new Date()),ss=klasseStudents(k.id);
  let h=`<div class="ph"><div><button class="crumb" onclick="go({klasse:null})">‹ Alle Klassen</button><h1>${esc(k.name)} <span class="sub">${esc(k.fach)}</span></h1></div>
- <div class="acts">${V.ktab==='sitz'?`<button onclick="addDesk('${k.id}')">+ Tisch</button><button onclick="autoDesks('${k.id}')">Automatisch anordnen</button><button class="dng" onclick="deskClear('${k.id}')">Sitzplan leeren</button>`:`<button class="pri" onclick="schuelerModal('${k.id}')">+ Schüler</button><button onclick="importModal('${k.id}')">Aus Datei importieren</button><button onclick="transferModal('${k.id}')">Schüler kopieren oder verschieben</button>`}<button onclick="klasseModal('${k.id}')">Bearbeiten</button><button onclick="kopieModal('${k.id}')">Klasse kopieren</button><button class="dng" onclick="delKlasse('${k.id}')">Löschen</button></div></div>
+ <div class="acts">${V.ktab==='sitz'?`<button onclick="addDesk('${k.id}')">+ Tisch</button><button onclick="autoDesks('${k.id}')">Automatisch anordnen</button><button class="dng" onclick="deskClear('${k.id}')">Sitzplan leeren</button>`:`<button class="pri" onclick="klNoteModal('${k.id}')">Note für alle eintragen</button><button onclick="schuelerModal('${k.id}')">+ Schüler</button><button onclick="importModal('${k.id}')">Aus Datei importieren</button><button onclick="transferModal('${k.id}')">Schüler kopieren oder verschieben</button>`}<button onclick="klasseModal('${k.id}')">Bearbeiten</button><button onclick="kopieModal('${k.id}')">Klasse kopieren</button><button class="dng" onclick="delKlasse('${k.id}')">Löschen</button></div></div>
  <div class="seg"><button class="${V.ktab==='schueler'?'on':''}" onclick="go({ktab:'schueler'})">Schüler</button><button class="${V.ktab==='sitz'?'on':''}" onclick="go({ktab:'sitz'})">Sitzplan</button></div>`;
  if(V.ktab==='sitz'){
   const desks=S.sitz[k.id]||[];
@@ -726,7 +726,7 @@ async function ocrImages(imgs){
  let cur=0;
  const w=await Tesseract.createWorker('deu',1,{logger:m=>{if(m.status==='recognizing text')imStat(`Texterkennung${imgs.length>1?' Seite '+(cur+1)+' von '+imgs.length:''}: ${Math.round(m.progress*100)} %`);else if(m.status)imStat('Texterkennung: '+m.status+' …')}});
  const words=[];
- try{for(cur=0;cur<imgs.length;cur++){const r=await w.recognize(imgs[cur]);(r.data.words||[]).forEach(x=>{if(x.confidence<25||!x.text.trim())return;const b=x.bbox;words.push({t:x.text.trim(),x0:b.x0,x1:b.x1,y:cur*1e5+(b.y0+b.y1)/2,h:b.y1-b.y0})})}}
+ try{for(cur=0;cur<imgs.length;cur++){const r=await w.recognize(imgs[cur]);(r.data.words||[]).forEach(x=>{if(x.confidence<10||!x.text.trim())return;const b=x.bbox;words.push({t:x.text.trim(),x0:b.x0,x1:b.x1,y:cur*1e5+(b.y0+b.y1)/2,h:b.y1-b.y0})})}}
  finally{await w.terminate()}
  return words;
 }
@@ -815,7 +815,7 @@ function imRecs(){
  IM.rows.forEach(r=>{
   const o={},add=(k,v,sep)=>{v=(v||'').trim();if(v)o[k]=o[k]?o[k]+(sep||', ')+v:v};
   m.forEach((f,i)=>{const v=(r.cells[i]||'').trim();if(!f||!v)return;
-   if(f==='name')Object.assign(o,splitName(v));else if(f==='tel')add('tel',v,' / ');else add(f,f==='nn'||f==='vn'?tCase(v):v,f==='nn'||f==='vn'?' ':', ')});
+   if(f==='mail')add('mail',v.replace(/\s+/g,'').replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi,''),', ');else if(f==='name')Object.assign(o,splitName(v));else if(f==='tel')add('tel',v,' / ');else add(f,f==='nn'||f==='vn'?tCase(v):v,f==='nn'||f==='vn'?' ':', ')});
   const has=o.nn||o.vn,joined=r.cells.join(' ');
   if(!has){/* Fortsetzungszeile, z. B. umbrochene Adresse; gehört zur nächstgelegenen Schülerzeile */
    if(Object.keys(o).length&&!RX.junk.test(joined))orph.push({o:o,y:r.y,after:recs.length});return}
@@ -941,6 +941,27 @@ function krankAdd(id){const d=$('#k_d').value,s=sc(id);if(!d)return;if(!s.krank.
 function krankEnt(id,d,u){const s=sc(id);s.unent=s.unent.filter(x=>x!==d);if(u)s.unent.push(d);save();render();krankModal(id)}
 function krankDel(id,d){const s=sc(id);s.krank=s.krank.filter(x=>x!==d);s.unent=s.unent.filter(x=>x!==d);save();render();krankModal(id)}
 function delSchueler(id){ask('Schüler löschen?',()=>{fotoDel(id);S.schueler=S.schueler.filter(s=>s.id!==id);Object.keys(S.sitz).forEach(k=>{S.sitz[k].forEach(d=>{if(d.sid===id)d.sid=''})});save();go(V.back==='alle'?{tab:'schueler',klasse:null,schueler:null}:{schueler:null})})}
+/* Eine Note (z. B. Klassenarbeit) für die ganze Klasse auf einmal */
+function klNoteModal(kid){
+ const k=kl(kid),ss=klasseStudents(kid),t=iso(new Date());
+ if(!ss.length)return info('Die Klasse hat noch keine Schüler.');
+ modal(`<h2>Note für alle eintragen <span class="sub">${esc(k.name)} · ${esc(k.fach)}</span></h2>
+ <div class="two"><label>Bereich<select id="kn_typ" onchange="knKat()"><option value="s">Schriftlich</option><option value="m">Mündlich</option></select></label><label>Art<select id="kn_kat"></select></label></div>
+ <div class="two"><label>Thema<input id="kn_th" placeholder="z. B. Unit 3"></label><label>Datum<input type="date" id="kn_d" value="${t}"></label></div>
+ <div class="sub" style="margin:12px 0 4px">Schüler ohne Note bekommen keinen Eintrag.</div>
+ ${ss.map(s=>`<div class="row"><span>${esc(s.nn)}, ${esc(s.vn)}${s.krank.includes(t)?' <span class="tag bad">krank</span>':''}</span><select class="kn_w" data-s="${s.id}" style="width:96px"><option value="">–</option>${notenOpts(null)}</select></div>`).join('')}
+ <div class="sub" id="kn_m"></div>
+ <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="klNoteSave()">Speichern</button></div>`);
+ knKat();
+}
+function knKat(){const l=$('#kn_typ').value==='s'?S.set.katS:S.set.katM;$('#kn_kat').innerHTML=l.map(x=>`<option>${esc(x)}</option>`).join('')}
+function klNoteSave(){
+ const o={typ:$('#kn_typ').value,kat:$('#kn_kat').value,d:$('#kn_d').value||iso(new Date()),th:$('#kn_th').value.trim(),n:''};
+ const l=Array.from(document.querySelectorAll('.kn_w')).filter(e=>e.value!=='');
+ if(!l.length){$('#kn_m').textContent='Bitte mindestens eine Note wählen.';return}
+ l.forEach(e=>{const s=sc(e.dataset.s);if(s)s.noten.push(Object.assign({id:uid(),w:parseFloat(e.value)},o))});
+ save();closeModal();render();info(l.length+(l.length===1?' Note':' Noten')+' eingetragen.');
+}
 function noteModal(sid,nid){
  const s=sc(sid),n=nid?s.noten.find(x=>x.id===nid):{typ:'m',kat:'',w:2,d:iso(new Date()),th:'',n:''};
  modal(`<h2>${nid?'Note bearbeiten':'Note eintragen'} <span class="sub">${esc(nameOf(s))}</span></h2>
