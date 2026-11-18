@@ -210,6 +210,7 @@ table.pl td:first-child{white-space:nowrap;min-width:110px}
 .tag.fe{background:var(--febg);color:var(--fe)}
 .tag.fr{background:var(--frbg);color:var(--fr)}
 .ban.fe{background:var(--febg);color:var(--fe)}
+.ban.arch{background:var(--acbg);color:var(--ac2)}
 .ban.fr{background:var(--frbg);color:var(--fr)}
 .card.fe{border-color:var(--fe)}
 .card.fr{border-color:var(--fr)}
@@ -343,7 +344,7 @@ async function abResume(){try{AB.perm=(await AB.h.requestPermission({mode:'readw
 async function abWrite(){
  if(!AB.h||!AB.perm||AB.busy)return;AB.busy=true;AB.timer=null;
  try{
-  const w=await AB.h.createWritable();await w.write(JSON.stringify(Object.assign({},S,{fotos:FOTO}),null,1));await w.close();
+  const w=await AB.h.createWritable();await w.write(JSON.stringify(bakData(),null,1));await w.close();
   AB.last=new Date();AB.err='';
   const t=iso(new Date());if(S.set.letzterExport!==t){S.set.letzterExport=t;_dirty=true;clearTimeout(_st);_st=setTimeout(flush,250)}
  }catch(e){AB.err='Schreiben fehlgeschlagen: '+((e&&e.message)||e);if(e&&e.name==='NotAllowedError'){AB.perm=false;AB.busy=false;render();return}}
@@ -359,8 +360,8 @@ function abStatus(){
  return `<div class="row first"><span>${esc(AB.h.name)}</span><span class="tag ${AB.perm?'ok':'warn'}">${AB.perm?'aktiv':'pausiert'}</span></div><div class="sub">${AB.last?'Zuletzt gesichert um '+AB.last.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'Noch nicht gesichert'}${AB.err?' · '+esc(AB.err):''}</div><div class="acts" style="margin-top:10px">${AB.perm?'<button onclick="abNow()">Jetzt sichern</button>':'<button class="pri" onclick="abResume()">Fortsetzen</button>'}<button onclick="abPick()">Andere Datei wählen</button><button class="dng" onclick="abOff()">Ausschalten</button></div>`;
 }
 let _st=null,_dirty=false,_fail=false;
-function flush(){if(!_dirty)return;_dirty=false;try{localStorage.setItem(KEY,JSON.stringify(S));if(_fail){_fail=false;render()}}catch(e){if(!_fail){_fail=true;render()}}}
-function save(){_dirty=true;clearTimeout(_st);_st=setTimeout(flush,250);abSchedule()}
+function flush(){if(ARCH_VIEW||!_dirty)return;_dirty=false;try{localStorage.setItem(KEY,JSON.stringify(S));if(_fail){_fail=false;render()}}catch(e){if(!_fail){_fail=true;render()}}}
+function save(){if(ARCH_VIEW)return;_dirty=true;clearTimeout(_st);_st=setTimeout(flush,250);abSchedule()}
 if(typeof addEventListener==='function'){addEventListener('beforeunload',flush);addEventListener('pagehide',flush);if(document.addEventListener)document.addEventListener('visibilitychange',()=>{if(document.hidden){flush();if(AB.timer){clearTimeout(AB.timer);abWrite()}}})}
 
 function slot(i){const c=(window.innerWidth||1200)<900?2:4,w=c===2?0.5:0.24;return{x:0.03+(i%c)*w,y:Math.min(0.04+Math.floor(i/c)*0.14,0.9)}}
@@ -402,9 +403,9 @@ try{applyTheme(getTheme())}catch(e){}
 
 let FOTO={},FES=null,FE=null;
 function idb(){return new Promise((res,rej)=>{try{const q=indexedDB.open('lehrertobi_fotos',1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}})}
-function fotoPut(id,f){FOTO[id]=f;idb().then(db=>{db.transaction('f','readwrite').objectStore('f').put(f,id)}).catch(()=>{})}
-function fotoDel(id){delete FOTO[id];idb().then(db=>{db.transaction('f','readwrite').objectStore('f').delete(id)}).catch(()=>{})}
-function fotoClear(){FOTO={};idb().then(db=>{db.transaction('f','readwrite').objectStore('f').clear()}).catch(()=>{})}
+function fotoPut(id,f){FOTO[id]=f;if(ARCH_VIEW)return;idb().then(db=>{db.transaction('f','readwrite').objectStore('f').put(f,id)}).catch(()=>{})}
+function fotoDel(id){delete FOTO[id];if(ARCH_VIEW)return;idb().then(db=>{db.transaction('f','readwrite').objectStore('f').delete(id)}).catch(()=>{})}
+function fotoClear(){FOTO={};if(ARCH_VIEW)return;idb().then(db=>{db.transaction('f','readwrite').objectStore('f').clear()}).catch(()=>{})}
 function fotoLoad(){idb().then(db=>{const rq=db.transaction('f').objectStore('f').openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){FOTO[c.key]=c.value;c.continue()}else render()}}).catch(()=>{})}
 function fotoStyle(f){const r=f.r||1,cw=(r>=1?r:1)*f.z,ch=(r>=1?1:1/r)*f.z;return `position:absolute;left:50%;top:50%;width:${cw*100}%;height:${ch*100}%;transform:translate(${-50+f.x/cw*100}%,${-50+f.y/ch*100}%)`}
 function avHtml(s,cls){const f=FOTO[s.id];return `<div class="av ${cls}">${f?`<img src="${f.src}" style="${fotoStyle(f)}" alt="" draggable="false">`:esc((s.vn[0]||'')+(s.nn[0]||''))}</div>`}
@@ -472,7 +473,7 @@ function go(p){
 }
 function render(){
  const t={heute:vHeute,klassen:vKlassen,schueler:vSchuelerAlle,woche:vStundenplan,kalender:vKalender,mehr:vMehr}[V.tab];
- $('#app').innerHTML=remindHtml()+(AB.h&&!AB.perm?`<div class="ban">Die automatische Sicherung ist pausiert. <button class="mini" onclick="abResume()">Fortsetzen</button></div>`:'')+(_fail?`<div class="ban fe">Speichern im Browser ist nicht möglich (Speicher voll oder gesperrt). Bitte jetzt eine Sicherung exportieren.</div>`:'')+t();
+ $('#app').innerHTML=archBan()+remindHtml()+(AB.h&&!AB.perm?`<div class="ban">Die automatische Sicherung ist pausiert. <button class="mini" onclick="abResume()">Fortsetzen</button></div>`:'')+(_fail?`<div class="ban fe">Speichern im Browser ist nicht möglich (Speicher voll oder gesperrt). Bitte jetzt eine Sicherung exportieren.</div>`:'')+t();
  const items=[['heute','home','Heute'],['klassen','users','Klassen'],['schueler','user','SchülerInnen'],['woche','clock','Stundenplan'],['kalender','cal2','Kalender']];
  const le=S.set.letzterExport;
  $('#side').innerHTML=`<div class="brand"><div class="logo">${ic('cap')}</div><span>Lehrer-Dashboard</span></div>`
@@ -505,6 +506,7 @@ function vHeute(){
  let h=`<div class="ph"><div><h1>Guten Tag</h1><div class="sub">${d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div></div>`;
  if(info.feiertag)h+=`<div class="ban fe">Heute ist Feiertag: ${esc(info.feiertag)}. Kein Unterricht.</div>`;
  if(info.ferien)h+=`<div class="ban fr">Heute sind Schulferien: ${esc(info.ferien)}.</div>`;
+ h+=archHint();
  if(!le||(new Date()-new Date(le))/864e5>14)h+=`<div class="ban">Sicherung fällig: Exportiere deine Daten über die Seitenleiste oder unter „Einstellungen“.</div>`;
  h+=`<div class="kpis"><div class="kpi"><b>${lessons.length}</b><span>Stunden heute</span></div><div class="kpi"><b>${kr.length}</b><span>Schüler krank</span></div><div class="kpi"><b>${S.schueler.length}</b><span>Schüler gesamt</span></div></div>`;
  h+=`<div class="g2"><div class="card"><h2>Unterricht heute</h2>`;
@@ -1343,6 +1345,7 @@ function vMehr(){
   h+=`</tr>`;
  });
  h+=`</table></div></div><div class="stack">
+ ${archCard()}
  <div class="card"><h2>Schuljahr</h2><div class="sub">Gilt für das 1. und 2. Halbjahr im Stundenplan und für „bis Halbjahresende“ bzw. „bis Schuljahresende“.</div>
  <div class="two" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label>Beginn<input type="date" value="${sjDefault().start}" onchange="sjSet('start',this.value)"></label><label>2. Halbjahr ab<input type="date" value="${sjDefault().hj}" onchange="sjSet('hj',this.value)"></label><label>Ende<input type="date" value="${sjDefault().ende}" onchange="sjSet('ende',this.value)"></label></div></div>
  <div class="card"><h2>Darstellung</h2><div class="seg" style="margin:0"><button class="${th==='light'?'on':''}" onclick="setTheme('light')">Hell</button><button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">Dunkel</button><button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">System</button></div></div>
@@ -1367,23 +1370,106 @@ function fachRen(i,v){v=v.trim();const o=S.set.faecher[i];if(!v||v===o){render()
 function fachDel(i){const f=S.set.faecher[i],n=S.klassen.filter(k=>k.fach===f).length;ask(n?`„${f}“ löschen? ${n} Klasse(n) behalten das Fach.`:`„${f}“ löschen?`,()=>{S.set.faecher.splice(i,1);save();render()})}
 function setList(k,v){S.set[k]=v.split(',').map(x=>x.trim()).filter(Boolean);save()}
 function emptyState(){const d=seed();return{klassen:[],schueler:[],plan:{},planung:{},termine:[],sitz:{},zeiten:d.zeiten,set:Object.assign({},d.set,{letzterExport:null})}}
+/* ---------- Schuljahre: Archiv (IndexedDB, in Sicherungen enthalten) ---------- */
+var ARCHIVE=[],ARCH_VIEW=null;
+const ADBN='lehrertobi_archiv';
+const archSort=l=>l.sort((x,y)=>y.name.localeCompare(x.name));
+function adbA(){return new Promise((res,rej)=>{try{const q=indexedDB.open(ADBN,1);q.onupgradeneeded=()=>q.result.createObjectStore('a');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}})}
+function archLoad(){adbA().then(db=>{const out=[],rq=db.transaction('a').objectStore('a').openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){out.push(c.value);c.continue()}else{ARCHIVE=archSort(out);if(V.tab==='mehr'||V.tab==='heute')render()}}}).catch(()=>{})}
+function archPut(a){return adbA().then(db=>new Promise((res,rej)=>{const tx=db.transaction('a','readwrite');tx.objectStore('a').put(a,a.id);tx.oncomplete=()=>{ARCHIVE=archSort(ARCHIVE.filter(x=>x.id!==a.id).concat([a]));res()};tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)}))}
+function archDelDb(id){ARCHIVE=ARCHIVE.filter(x=>x.id!==id);adbA().then(db=>{db.transaction('a','readwrite').objectStore('a').delete(id)}).catch(()=>{})}
+function archReplace(l){l=l.filter(a=>a&&a.id&&a.name&&a.data);ARCHIVE=archSort(l.slice());adbA().then(db=>{const st=db.transaction('a','readwrite').objectStore('a');st.clear();l.forEach(a=>st.put(a,a.id))}).catch(()=>{})}
+const bakData=()=>Object.assign({},ARCH_VIEW?ARCH_VIEW.S0:S,{fotos:ARCH_VIEW?ARCH_VIEW.F0:FOTO,archiv:ARCHIVE});
+const archBlock=()=>ARCH_VIEW?(info('Du siehst gerade das Archiv. Kehre zuerst zum aktuellen Schuljahr zurück.'),true):false;
+/* Name wie SJ26/27: Schuljahr beginnt nach den Sommerferien */
+function sjName(ds){
+ ds=ds||iso(new Date());const sj=S.set.sj;let y;
+ if(sj&&sj.start&&ds>=sj.start&&(!sj.ende||ds<=iso(addD(new Date(sj.ende+'T00:00:00'),60))))y=+sj.start.slice(0,4);
+ else{y=+ds.slice(0,4);if(+ds.slice(5,7)<8||FERIEN.some(f=>f[2]==='Sommerferien'&&ds>=f[0]&&ds<=f[1]))y--}
+ return 'SJ'+String(y%100).padStart(2,'0')+'/'+String((y+1)%100).padStart(2,'0');
+}
+function sjNext(){
+ const t=iso(new Date()),sj=S.set.sj,ref=sj&&sj.ende&&sj.ende>t?sj.ende:t;
+ const f1=FERIEN.find(f=>f[2]==='Sommerferien'&&f[1]>=ref);if(!f1)return null;
+ const start=iso(addD(new Date(f1[1]+'T00:00:00'),1)),f2=FERIEN.find(f=>f[2]==='Sommerferien'&&f[0]>start);
+ return {start:start,hj:(+start.slice(0,4)+1)+'-02-01',ende:f2?iso(addD(new Date(f2[0]+'T00:00:00'),-1)):(+start.slice(0,4)+1)+'-07-15'};
+}
+function archBan(){return ARCH_VIEW?`<div class="ban arch">Archiv <b>${esc(ARCH_VIEW.name)}</b>: nur zum Ansehen, Änderungen werden nicht gespeichert. <button class="mini pri" onclick="archClose()">Zurück zum aktuellen Schuljahr</button></div>`:''}
+function archHint(){
+ if(ARCH_VIEW||!S.klassen.length)return '';
+ const t=iso(new Date()),sj=S.set.sj,over=FERIEN.some(f=>f[2]==='Sommerferien'&&t>=f[0]&&t<=f[1])||(sj&&sj.ende&&t>sj.ende);
+ if(!over||ARCHIVE.some(a=>a.name===sjName(t)))return '';
+ return `<div class="ban">Das Schuljahr ${sjName(t)} ist vorbei. <button class="mini pri" onclick="archModal()">Jetzt archivieren</button> <button class="mini" onclick="go({tab:'mehr'})">Später</button></div>`;
+}
+function archCard(){
+ return `<div class="card"><h2>Schuljahre</h2>
+ <div class="row"><span><b>${esc(ARCH_VIEW?ARCH_VIEW.name:sjName())}</b> <span class="sub">${ARCH_VIEW?'Archiv, geöffnet':'aktuell'}</span></span>${ARCH_VIEW?`<button class="mini pri" onclick="archClose()">Zurück zum aktuellen Schuljahr</button>`:`<button class="mini" onclick="archModal()">Abschließen und archivieren</button>`}</div>
+ ${ARCHIVE.map(a=>`<div class="row" style="flex-wrap:wrap"><span><b>${esc(a.name)}</b><div class="sub">archiviert am ${dlong(a.datum)} · ${a.n.k} Klassen · ${a.n.s} Schüler</div></span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="mini pri" onclick="archOpen('${a.id}')">Öffnen</button><button class="mini" onclick="archExport('${a.id}')">Als Datei</button><button class="mini dng" onclick="archDel('${a.id}')">Löschen</button></span></div>`).join('')||'<div class="sub" style="margin-top:6px">Noch keine archivierten Schuljahre.</div>'}
+ <div class="sub" style="margin-top:8px">Archivierte Schuljahre sind in jeder Sicherung enthalten.</div></div>`;
+}
+function archModal(){
+ if(archBlock())return;
+ const nx=sjNext();
+ modal(`<h2>Schuljahr abschließen</h2>
+ <div class="sub">Das ganze Schuljahr wird archiviert: Klassen, Schüler, Noten, Fehltage, Notizen, Stundenplan und Fotos. Unter Einstellungen → Schuljahre kannst du es jederzeit öffnen.</div>
+ <label>Name des Archivs<input id="ar_n" value="${esc(sjName())}"></label>
+ <h3>Und dann?</h3>
+ <label class="chk"><input type="radio" name="ar_m" value="k" checked> Klassen und Schüler behalten (Stammdaten, Fotos, Sitzplan). Noten, Fehltage, Notizen und Stundenplan beginnen neu.</label>
+ <label class="chk"><input type="radio" name="ar_m" value="l"> Leer starten. Einstellungen und Fächer bleiben.</label>
+ <label class="chk"><input type="radio" name="ar_m" value="a"> Nur archivieren, alles bleibt wie es ist.</label>
+ ${nx?`<div class="sub" style="margin-top:8px">Das neue Schuljahr läuft vom ${dlong(nx.start)} bis ${dlong(nx.ende)}.</div>`:''}
+ <div class="sub" id="ar_e" style="color:var(--bad);margin-top:8px"></div>
+ <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="archSave()">Archivieren</button></div>`);
+}
+async function archSave(){
+ const name=$('#ar_n').value.trim(),m=(document.querySelector('input[name=ar_m]:checked')||{}).value||'a',err=t=>{$('#ar_e').textContent=t};
+ if(!name)return err('Bitte einen Namen eingeben.');
+ if(ARCHIVE.some(a=>a.name===name))return err('Ein Archiv „'+name+'“ gibt es schon. Bitte einen anderen Namen wählen.');
+ flush();
+ const a={id:uid(),name:name,datum:iso(new Date()),n:{k:S.klassen.length,s:S.schueler.length},data:JSON.parse(JSON.stringify(S)),fotos:Object.assign({},FOTO)};
+ try{await archPut(a)}catch(e){return err('Das Archiv konnte nicht gespeichert werden, vielleicht ist der Speicher voll. Es wurde nichts verändert.')}
+ if(m==='k'){
+  S.schueler.forEach(s=>{s.noten=[];s.krank=[];s.unent=[];s.notizen=[];['zeugnis','ziel','stand'].forEach(k=>{if(k in s)s[k]=''});delete s.zeugnisD;if(s.vereinb)s.vereinb=[]});
+  if(S.auftraege)S.auftraege=[];S.termine=[];S.planung={};S.plan={};
+ }else if(m==='l'){S=Object.assign(emptyState(),{set:S.set,zeiten:S.zeiten});fotoClear()}
+ if(m!=='a'){const nx=sjNext();if(nx)S.set.sj=nx}
+ save();closeModal();go({tab:'mehr',klasse:null,schueler:null});
+ info('„'+name+'“ ist archiviert. Mach jetzt am besten eine Sicherung, damit das Archiv auch außerhalb des Browsers liegt.');
+}
+function archOpen(id){
+ const a=ARCHIVE.find(x=>x.id===id);if(!a)return;
+ if(ARCH_VIEW){S=ARCH_VIEW.S0;FOTO=ARCH_VIEW.F0;ARCH_VIEW=null}
+ flush();clearTimeout(_st);
+ ARCH_VIEW={id:id,name:a.name,S0:S,F0:FOTO};S=normalize(JSON.parse(JSON.stringify(a.data)));FOTO=Object.assign({},a.fotos||{});
+ go({tab:'klassen',klasse:null,schueler:null,week:0});
+}
+function archClose(){if(!ARCH_VIEW)return;S=ARCH_VIEW.S0;FOTO=ARCH_VIEW.F0;ARCH_VIEW=null;closeModal();go({tab:'mehr',klasse:null,schueler:null,week:0})}
+function archDel(id){const a=ARCHIVE.find(x=>x.id===id);if(!a)return;ask('Archiv „'+a.name+'“ endgültig löschen? Das lässt sich nicht rückgängig machen.',()=>{archDelDb(id);render()})}
+function archExport(id){
+ const a=ARCHIVE.find(x=>x.id===id);if(!a)return;
+ const b=new Blob([JSON.stringify(Object.assign({},a.data,{fotos:a.fotos||{}}),null,1)],{type:'application/json'}),l=document.createElement('a');
+ l.href=URL.createObjectURL(b);l.download='lehrer-dashboard-'+a.name.replace(/[^\w-]+/g,'-')+'.json';document.body.appendChild(l);l.click();l.remove();
+}
 function exportJ(){
+ if(archBlock())return;
  S.set.letzterExport=iso(new Date());save();
- const b=new Blob([JSON.stringify(Object.assign({},S,{fotos:FOTO}),null,1)],{type:'application/json'}),a=document.createElement('a');
+ const b=new Blob([JSON.stringify(bakData(),null,1)],{type:'application/json'}),a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download='lehrer-dashboard-backup-'+iso(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();render();
 }
 function importJ(inp){
+ if(archBlock())return;
  const f=inp.files[0];if(!f)return;const r=new FileReader();
  r.onload=()=>{let j;try{j=JSON.parse(r.result);if(!j.klassen||!j.schueler)throw 0}catch(e){return info('Die Datei ist keine gültige Sicherung.')}
-  ask('Alle aktuellen Daten durch die Sicherung ersetzen?',()=>{fotoClear();const fo=j.fotos||{};delete j.fotos;Object.keys(fo).forEach(k=>fotoPut(k,fo[k]));S=normalize(j);save();go({tab:'heute'})})};
+  ask('Alle aktuellen Daten durch die Sicherung ersetzen?',()=>{fotoClear();const fo=j.fotos||{};delete j.fotos;const ar=j.archiv;delete j.archiv;if(Array.isArray(ar))archReplace(ar);Object.keys(fo).forEach(k=>fotoPut(k,fo[k]));S=normalize(j);save();go({tab:'heute'})})};
  r.readAsText(f);
 }
 /* ===== iPad: Teilen-Sicherung, Erinnerung, PWA ===== */
 const SHARE=(()=>{try{return typeof navigator!=='undefined'&&!!navigator.share&&!!navigator.canShare&&navigator.canShare({files:[new File(['{}'],'t.json',{type:'application/json'})]})}catch(e){return false}})();
 const STANDALONE=(()=>{try{return (window.navigator.standalone===true)||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)}catch(e){return false}})();
 let _remindOff=false,PERSIST=null;
-function backupFile(){return new File([JSON.stringify(Object.assign({},S,{fotos:FOTO}),null,1)],'lehrer-dashboard-backup-'+iso(new Date())+'.json',{type:'application/json'})}
+function backupFile(){return new File([JSON.stringify(bakData(),null,1)],'lehrer-dashboard-backup-'+iso(new Date())+'.json',{type:'application/json'})}
 async function shareJ(){
+ if(archBlock())return;
  const f=backupFile();
  try{await navigator.share({files:[f],title:'Lehrer-Dashboard Sicherung'});S.set.letzterExport=iso(new Date());save();render()}
  catch(e){if(e&&e.name==='AbortError')return;exportJ()}
@@ -1410,7 +1496,7 @@ try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')r.update().catch(()=>{})})).catch(()=>{}));
 }}catch(e){}
 })();
-initTop();render();fotoLoad();abLoad();
+initTop();render();fotoLoad();abLoad();archLoad();
 </script>
 </body>
 </html>
