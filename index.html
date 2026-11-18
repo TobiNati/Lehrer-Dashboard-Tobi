@@ -129,6 +129,7 @@ textarea.zg{min-height:140px}
 .chip small{color:var(--tx2);font-size:11px;font-weight:400;margin-left:6px}
 .av{width:56px;height:56px;border-radius:16px;background:var(--acbg);color:var(--ac2);display:grid;place-items:center;font-weight:650;font-size:19px;flex:none;position:relative;overflow:hidden}
 .av img{display:block}
+.av.kn{width:auto;min-width:56px;padding:0 14px;font-size:17px;white-space:nowrap}
 .av.sm{width:34px;height:34px;border-radius:10px;font-size:12px}
 .av.lg{width:104px;height:104px;border-radius:22px;font-size:30px}
 .av.dk{width:48px;height:48px;border-radius:12px;font-size:15px;position:absolute;left:7px;top:6px}
@@ -144,6 +145,8 @@ textarea.zg{min-height:140px}
 .mini{padding:4px 10px;font-size:13px;border-radius:8px}
 .rowact{display:flex;gap:6px;justify-content:flex-end}
 .tb.rw{cursor:pointer;border-radius:10px}
+.tb.kl{grid-template-columns:minmax(0,1fr) 120px 110px 110px 120px 170px}
+@media(max-width:800px){.tb.kl{grid-template-columns:minmax(0,1fr) 64px 56px 56px}}
 .tb.nt{grid-template-columns:minmax(0,1fr) 70px 110px 200px}
 .tb.nt>*:first-child{overflow-wrap:anywhere}
 .tb.nt .tag{white-space:normal}
@@ -528,6 +531,7 @@ function matchS(s,q){
 function sListe(){
  const t=iso(new Date());
  const ss=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V.q||'')).sort((a,b)=>a.nn.localeCompare(b.nn,'de')||a.vn.localeCompare(b.vn,'de'));
+ if(ansicht('schueler')==='kachel')return ss.length?ss.map(s=>sKachel(s,true)).join(''):'<div class="sub">Keine SchülerInnen gefunden.</div>';
  let h=`<div class="tb hd w"><div>Name</div><div>Klasse</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote</div><div>Status</div><div></div></div>`;
  h+=ss.length?ss.map(s=>{const st=stats(s),k=kl(s.klasse),kr=s.krank.includes(t);
   return `<div class="tb rw w" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}',back:'alle'})"><div style="display:flex;align-items:center;gap:10px">${avHtml(s,'sm')}<span><b>${esc(s.nn)}</b>, ${esc(s.vn)}</span></div><div><span class="tag">${esc(k.name)} · ${esc(k.fach)}</span></div><div>${num(st.a)}</div><div>${num(st.b)}</div><div><b>${zn(st.g)}</b> <span class="sub">(${num(st.g)})</span></div><div>${kr?'<span class="tag bad">krank</span>':''}</div><div class="rowact"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`}).join(''):'<div class="sub" style="padding:14px 8px">Keine SchülerInnen gefunden.</div>';
@@ -537,10 +541,10 @@ function sUpdate(){const l=$('#sl');if(l)l.innerHTML=sListe();const c=$('#sc');i
 const cnt=()=>{const n=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V.q||'')).length;return n+' von '+S.schueler.length+' SchülerInnen'};
 function sEnter(e){if(e.key!=='Enter')return;const f=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V.q||'')).sort((a,b)=>a.nn.localeCompare(b.nn,'de'))[0];if(f)go({tab:'klassen',klasse:f.klasse,schueler:f.id,back:'alle'})}
 function vSchuelerAlle(){
- return `<div class="ph"><div><h1>SchülerInnen</h1><div class="sub" id="sc">${cnt()}</div></div></div>
+ return `<div class="ph"><div><h1>SchülerInnen</h1><div class="sub" id="sc">${cnt()}</div></div></div>${ansSeg('schueler')}
  <div class="two" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);margin:0 0 16px"><input id="sq" type="search" placeholder="Suchen nach Name, Klasse, Betrieb, Telefon …" value="${esc(V.q)}" oninput="V.q=this.value;sUpdate()" onkeydown="sEnter(event)" autofocus>
  <select onchange="V.qk=this.value;sUpdate()"><option value="">Alle Klassen</option>${S.klassen.map(k=>`<option value="${k.id}" ${V.qk===k.id?'selected':''}>${esc(k.name)} · ${esc(k.fach)}</option>`).join('')}</select></div>
- <div class="card" id="sl">${sListe()}</div>`;
+ <div class="${ansicht('schueler')==='kachel'?'cards':'card'}" id="sl">${sListe()}</div>`;
 }
 let G={items:[],sel:0};
 function gClose(){const b=$('#gr');if(b)b.classList.remove('on')}
@@ -585,14 +589,33 @@ function initTop(){
   document.addEventListener('keydown',e=>{const t=e.target&&e.target.tagName;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#gq').focus()}else if(e.key==='/'&&t!=='INPUT'&&t!=='TEXTAREA'&&t!=='SELECT'){e.preventDefault();$('#gq').focus()}});
  }
 }
+/* Ansicht je Seite: Liste oder Kacheln (Wahl wird gemerkt) */
+const ANS0={klassen:'kachel',klasse:'liste',schueler:'liste'};
+const ansicht=k=>(S.set.ans&&S.set.ans[k])||ANS0[k];
+function setAns(k,v){S.set.ans=Object.assign({},S.set.ans,{[k]:v});save();render()}
+const ansSeg=(k,st)=>`<div class="seg"${st||''}><button class="${ansicht(k)==='liste'?'on':''}" onclick="setAns('${k}','liste')">Liste</button><button class="${ansicht(k)==='kachel'?'on':''}" onclick="setAns('${k}','kachel')">Kacheln</button></div>`;
+function klStats(k){const t=iso(new Date()),ss=S.schueler.filter(s=>s.klasse===k.id),st=ss.map(stats),a=f=>avg(st.map(x=>x[f]).filter(x=>x!=null));return{n:ss.length,kr:ss.filter(s=>s.krank.includes(t)).length,a:a('a'),b:a('b'),g:a('g')}}
+function klListe(){
+ if(!S.klassen.length)return '<div class="sub">Noch keine Klassen.</div>';
+ return `<div class="card"><div class="tb hd kl"><div>Klasse</div><div>Schüler</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote Ø</div><div></div></div>`+S.klassen.map(k=>{const x=klStats(k);
+  return `<div class="tb rw kl" onclick="go({klasse:'${k.id}',ktab:'schueler'})"><div><b>${esc(k.name)}</b> <span class="sub">${esc(k.fach)}</span></div><div>${x.n}${x.kr?` <span class="tag bad">${x.kr} krank</span>`:''}</div><div>${num(x.a)}</div><div>${num(x.b)}</div><div><b>${num(x.g)}</b></div><div class="rowact"><button class="mini" onclick="event.stopPropagation();klasseModal('${k.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delKlasse('${k.id}')">Löschen</button></div></div>`}).join('')+'</div>';
+}
+function sKachel(s,alle){
+ const st=stats(s),k=kl(s.klasse),kr=s.krank.includes(iso(new Date())),info=[alle&&k?esc(k.name)+' · '+esc(k.fach):'',s.betrieb?esc(s.betrieb):''].filter(Boolean).join(' · ');
+ return `<div class="card click" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}'${alle?",back:'alle'":''}})"><div class="head">${avHtml(s,'')}<div style="min-width:0"><b style="font-size:16px">${esc(s.nn)}, ${esc(s.vn)}</b>${info?`<div class="sub">${info}</div>`:''}${kr?'<span class="tag bad">krank</span>':''}</div></div>
+ <div class="row" style="margin-top:12px"><span class="sub">Schriftlich Ø</span><b>${num(st.a)}</b></div><div class="row"><span class="sub">Mündlich Ø</span><b>${num(st.b)}</b></div><div class="row"><span class="sub">Zeugnisnote</span><b>${zn(st.g)} <span class="sub">(${num(st.g)})</span></b></div>
+ <div class="acts" style="margin-top:10px"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`;
+}
 function vKlassen(){
  if(V.schueler&&sc(V.schueler))return vSchueler(sc(V.schueler));
  if(V.klasse&&kl(V.klasse))return vKlasse(kl(V.klasse));
  const t=iso(new Date());
- let h=`<div class="ph"><div><h1>Klassen</h1><div class="sub">${S.klassen.length} Klassen und Fächer</div></div><div class="acts"><button class="pri" onclick="klasseModal()">+ Neue Klasse</button><button onclick="importModal()">Aus Datei importieren</button></div></div><div class="cards">`;
+ let h=`<div class="ph"><div><h1>Klassen</h1><div class="sub">${S.klassen.length} Klassen und Fächer</div></div><div class="acts"><button class="pri" onclick="klasseModal()">+ Neue Klasse</button><button onclick="importModal()">Aus Datei importieren</button></div></div>${ansSeg('klassen')}`;
+ if(ansicht('klassen')==='liste')return h+klListe();
+ h+=`<div class="cards">`;
  S.klassen.forEach(k=>{
   const ss=S.schueler.filter(s=>s.klasse===k.id),g=avg(ss.map(s=>stats(s).g).filter(x=>x!=null)),kr=ss.filter(s=>s.krank.includes(t)).length;
-  h+=`<div class="card click" onclick="go({klasse:'${k.id}',ktab:'schueler'})"><div class="head"><div class="av" style="font-size:17px">${esc(k.name)}</div><div><b style="font-size:17px">${esc(k.fach)}</b><div class="sub">${ss.length} Schüler${kr?' · '+kr+' krank':''}</div></div></div><div class="row" style="margin-top:14px"><span class="sub">Schriftlich Ø</span><b>${num(avg(ss.map(s=>stats(s).a).filter(x=>x!=null)))}</b></div><div class="row"><span class="sub">Mündlich Ø</span><b>${num(avg(ss.map(s=>stats(s).b).filter(x=>x!=null)))}</b></div><div class="row"><span class="sub">Zeugnisnote Ø</span><b>${num(g)}</b></div><div class="acts" style="margin-top:12px"><button onclick="event.stopPropagation();klasseModal('${k.id}')">Bearbeiten</button><button class="dng" onclick="event.stopPropagation();delKlasse('${k.id}')">Löschen</button></div></div>`;
+  h+=`<div class="card click" onclick="go({klasse:'${k.id}',ktab:'schueler'})"><div class="head"><div class="av kn">${esc(k.name)}</div><div><b style="font-size:17px">${esc(k.fach)}</b><div class="sub">${ss.length} Schüler${kr?' · '+kr+' krank':''}</div></div></div><div class="row" style="margin-top:14px"><span class="sub">Schriftlich Ø</span><b>${num(avg(ss.map(s=>stats(s).a).filter(x=>x!=null)))}</b></div><div class="row"><span class="sub">Mündlich Ø</span><b>${num(avg(ss.map(s=>stats(s).b).filter(x=>x!=null)))}</b></div><div class="row"><span class="sub">Zeugnisnote Ø</span><b>${num(g)}</b></div><div class="acts" style="margin-top:12px"><button onclick="event.stopPropagation();klasseModal('${k.id}')">Bearbeiten</button><button class="dng" onclick="event.stopPropagation();delKlasse('${k.id}')">Löschen</button></div></div>`;
  });
  return h+`</div>`;
 }
@@ -600,11 +623,12 @@ function vKlasse(k){
  const t=iso(new Date()),ss=klasseStudents(k.id);
  let h=`<div class="ph"><div><button class="crumb" onclick="go({klasse:null})">‹ Alle Klassen</button><h1>${esc(k.name)} <span class="sub">${esc(k.fach)}</span></h1></div>
  <div class="acts">${V.ktab==='sitz'?`<button onclick="addDesk('${k.id}')">+ Tisch</button><button onclick="autoDesks('${k.id}')">Automatisch anordnen</button><button class="dng" onclick="deskClear('${k.id}')">Sitzplan leeren</button>`:`<button class="pri" onclick="klNoteModal('${k.id}')">Note für alle eintragen</button><button onclick="schuelerModal('${k.id}')">+ Schüler</button><button onclick="importModal('${k.id}')">Aus Datei importieren</button><button onclick="transferModal('${k.id}')">Schüler kopieren oder verschieben</button>`}<button onclick="klasseModal('${k.id}')">Bearbeiten</button><button onclick="kopieModal('${k.id}')">Klasse kopieren</button><button class="dng" onclick="delKlasse('${k.id}')">Löschen</button></div></div>
- <div class="seg"><button class="${V.ktab==='schueler'?'on':''}" onclick="go({ktab:'schueler'})">Schüler</button><button class="${V.ktab==='sitz'?'on':''}" onclick="go({ktab:'sitz'})">Sitzplan</button></div>`;
+ <div class="seg"><button class="${V.ktab==='schueler'?'on':''}" onclick="go({ktab:'schueler'})">Schüler</button><button class="${V.ktab==='sitz'?'on':''}" onclick="go({ktab:'sitz'})">Sitzplan</button></div>${V.ktab!=='sitz'?ansSeg('klasse',' style="margin-left:10px"'):''}`;
  if(V.ktab==='sitz'){
   const desks=S.sitz[k.id]||[];
   return h+`<div class="sub" style="margin-bottom:10px">Tisch ziehen zum Verschieben, antippen zum Bearbeiten und für die mündliche Note. „mündlich Ø“ ist der Durchschnitt der mündlichen Noten, ausgegraute Tische sind krank gemeldet. Jede neue Note erscheint sofort in der Schüler- und Klassenübersicht und fließt in die Zeugnisnote (${S.set.gew}/${100-S.set.gew} schriftlich/mündlich) ein.</div><div id="sitz" class="sitz" data-k="${k.id}">${desks.map(deskHtml).join('')}</div>`;
  }
+ if(ansicht('klasse')==='kachel')return h+(ss.length?`<div class="cards">${ss.map(s=>sKachel(s,false)).join('')}</div>`:'<div class="sub">Noch keine Schüler.</div>');
  h+=`<div class="card"><div class="tb hd"><div>Name</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote</div><div>Status</div><div></div></div>`;
  h+=ss.length?ss.map(s=>{const st=stats(s),kr=s.krank.includes(t);return `<div class="tb rw" onclick="go({schueler:'${s.id}'})"><div style="display:flex;align-items:center;gap:10px">${avHtml(s,'sm')}<span><b>${esc(s.nn)}</b>, ${esc(s.vn)}</span></div><div>${num(st.a)}</div><div>${num(st.b)}</div><div><b>${zn(st.g)}</b> <span class="sub">(${num(st.g)})</span></div><div>${kr?'<span class="tag bad">krank</span>':''}</div><div class="rowact"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`}).join(''):'<div class="sub" style="padding:12px 8px">Noch keine Schüler.</div>';
  return h+`</div>`;
