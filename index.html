@@ -178,7 +178,7 @@ textarea.zg{min-height:140px}
 .imt th select{width:auto;min-width:130px;margin:0}
 .btns .btn{width:auto;margin:0}
 .btns.two{display:grid}
-.tt{display:grid;grid-template-columns:44px repeat(5,minmax(120px,1fr));gap:0 8px;min-width:700px}
+.tt{display:grid;grid-template-columns:54px repeat(5,minmax(120px,1fr));gap:0 8px;min-width:700px}
 .ttw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tt-hd{padding:0 2px 8px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:34px}
 .tt-hd.today{color:var(--ac2)}
@@ -186,6 +186,11 @@ textarea.zg{min-height:140px}
 .tt-ax span{position:absolute;right:6px;transform:translateY(-50%);font-size:11px;color:var(--tx2)}
 .tt-c{border-radius:12px;background:var(--card);border:1px solid var(--bd)}
 .tt-c.fe{background:var(--febg)}.tt-c.fr{background:var(--frbg)}
+.tt-bn{position:absolute;left:0;right:4px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-style:normal;font-size:10.5px;color:var(--tx2);border-right:3px solid var(--ac);padding:1px 6px 1px 0;box-sizing:border-box}
+.tt-bn b{color:var(--ac2);font-size:13px}
+.tt-ax .tt-bn span{position:static;transform:none;right:auto}
+.imt .tag.neu{display:block;width:max-content;margin-top:4px}
+.tt-r{position:absolute;left:0;right:0;background:var(--nb);opacity:.55;border-top:1px dashed var(--bd);border-bottom:1px dashed var(--bd)}
 .tt-c i{position:absolute;left:0;right:0;border-top:1px dashed var(--bd)}
 .tt-c .free{position:absolute;top:10px;left:8px;right:8px;font-size:12px}
 .tt-b{position:absolute;padding:4px 7px;border-radius:9px;background:var(--acbg);border-left:3px solid var(--ac);overflow:hidden;cursor:pointer;font-size:12px;line-height:1.3;box-sizing:border-box}
@@ -380,9 +385,9 @@ function seed(){
  sch.filter(s=>s.klasse==='k1')[2].krank.push(iso(new Date()));
  const sitz={};K.forEach(k=>{sitz[k.id]=autoLayout(sch.filter(s=>s.klasse===k.id).map(s=>s.id))});
  return{klassen:K,schueler:sch,
-  plan:{'0-0':'k1','0-1':'k3','0-3':'k2','0-5':'k1','1-0':'k2','1-2':'k1','1-4':'k3','2-1':'k1','2-3':'k2','2-5':'k3','3-0':'k3','3-2':'k2','3-3':'k1','4-1':'k2','4-2':'k3','4-4':'k1'},
+  plan:{'0-0':'k1','0-1':'k3','0-3':'k2','1-0':'k2','1-2':'k1','1-4':'k3','2-1':'k1','2-3':'k2','3-0':'k3','3-2':'k2','3-3':'k1','4-1':'k2','4-2':'k3','4-4':'k1'},
   planung:{},sitz:sitz,termine:[],
-  zeiten:[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']],
+  zeiten:[['07:30','09:00'],['09:20','10:50'],['11:10','12:40'],['13:15','14:45'],['15:00','16:30']],
   set:{gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null}};
 }
 
@@ -441,7 +446,8 @@ function feSave(){if(!FE)return info('Bitte zuerst ein Foto auswählen.');fotoPu
 function feRemove(){fotoDel(FES);closeModal();render()}
 function normalize(d){
  d.klassen=d.klassen||[];d.schueler=d.schueler||[];delete d.auftraege;d.plan=d.plan||{};d.planung=d.planung||{};d.termine=d.termine||[];d.sitz=d.sitz||{};
- if(!d.zeiten||!d.zeiten.length)d.zeiten=[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']];
+ /* altes 45-Minuten-Raster auf die 90-Minuten-Blöcke umstellen */
+ if(!d.zeiten||!d.zeiten.length||JSON.stringify(d.zeiten)===JSON.stringify([['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']])){d.zeiten=[['07:30','09:00'],['09:20','10:50'],['11:10','12:40'],['13:15','14:45'],['15:00','16:30']];Object.keys(d.plan).forEach(k=>{if(+k.split('-')[1]>=5)delete d.plan[k]})}
  d.set=Object.assign({gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null},d.set||{});
  d.schueler.forEach(s=>{s.noten=s.noten||[];s.krank=s.krank||[];s.unent=s.unent||[];s.notizen=s.notizen||[];['vn','nn','tel','betrieb','mail','ziel','stand'].forEach(k=>{if(s[k]==null)s[k]=''})});
  d.klassen.forEach(k=>{if(!d.sitz[k.id])d.sitz[k.id]=[]});
@@ -1107,9 +1113,9 @@ function lessonsOn(ds){
  S.termine.forEach(t=>{if(occurs(t,ds,free))out.push({key:ds+'|'+t.id,von:t.von,bis:t.bis,k:t.kid?kl(t.kid):null,titel:t.titel,raum:t.raum,t:t})});
  return out.sort((a,b)=>a.von.localeCompare(b.von));
 }
-const lesLabel=l=>(l.k?esc(l.k.name)+' · '+esc(l.k.fach)+(l.titel?' · '+esc(l.titel):''):esc(l.titel||'Termin'))+(l.raum?' · '+esc(l.raum):'');
-function sjEnde(ds){const f=FERIEN.find(x=>x[2]==='Sommerferien'&&x[0]>ds);return f?iso(addD(new Date(f[0]+'T00:00:00'),-1)):''}
-function hjEnde(ds){const y=+ds.slice(0,4),j=(+ds.slice(5,7)>=8?y+1:y)+'-01-31';return ds<=j?j:sjEnde(ds)}
+const lesLabel=l=>(l.k?esc(l.k.name)+' · '+esc(l.titel||l.k.fach):esc(l.titel||'Termin'))+(l.raum?' · '+esc(l.raum):'');
+function sjEnde(ds){const sj=S.set.sj;if(sj&&sj.ende&&ds<=sj.ende&&ds>=(sj.start||''))return sj.ende;const f=FERIEN.find(x=>x[2]==='Sommerferien'&&x[0]>ds);return f?iso(addD(new Date(f[0]+'T00:00:00'),-1)):''}
+function hjEnde(ds){const sj=S.set.sj;if(sj&&sj.hj&&sj.start&&ds>=sj.start&&ds<sj.hj)return iso(addD(new Date(sj.hj+'T00:00:00'),-1));if(sj&&sj.hj&&sj.ende&&ds>=sj.hj&&ds<=sj.ende)return sj.ende;const y=+ds.slice(0,4),j=(+ds.slice(5,7)>=8?y+1:y)+'-01-31';return ds<=j?j:sjEnde(ds)}
 function wdhText(t){
  const tg=(t.tage||[]).slice().sort().map(i=>WT7[i]).join(', ');
  const w={einmal:'Einmalig am '+dlong(t.start),taeglich:'Täglich Mo–Fr',woechentlich:'Jede Woche '+tg,zweiwoechentlich:'Alle 2 Wochen '+tg,monatlich:'Monatlich am '+(+t.start.slice(8))+'.'}[t.wdh];
@@ -1125,7 +1131,7 @@ function vStundenplan(){
  const now=new Date();now.setHours(0,0,0,0);
  const td=iso(now),mon=addD(now,-wdOf(td)+7*V.week),fri=addD(mon,4);
  let h=`<div class="ph"><div><h1>Stundenplan</h1><div class="sub">${V.spv==='liste'?S.termine.length+(S.termine.length===1?' Eintrag':' Einträge'):dshort(iso(mon))+'–'+dlong(iso(fri))}</div></div>
- <div class="acts">${V.spv==='liste'?'':`<button onclick="go({week:${V.week-1}})">‹ Vorherige</button><button onclick="go({week:0})">Diese Woche</button><button onclick="go({week:${V.week+1}})">Nächste ›</button>`}<button class="pri" onclick="terminModal()">+ Eintrag</button></div></div>
+ <div class="acts">${V.spv==='liste'?'':`<button onclick="go({week:${V.week-1}})">‹ Vorherige</button><button onclick="go({week:0})">Diese Woche</button><button onclick="go({week:${V.week+1}})">Nächste ›</button>`}<button onclick="spModal()">Aus PDF übernehmen</button><button class="pri" onclick="terminModal()">+ Eintrag</button></div></div>
  <div class="seg"><button class="${V.spv!=='liste'?'on':''}" onclick="go({spv:'woche'})">Woche</button><button class="${V.spv==='liste'?'on':''}" onclick="go({spv:'liste'})">Alle Einträge</button></div>`;
  if(V.spv==='liste'){
   const l=S.termine.slice().sort((a,b)=>a.start.localeCompare(b.start)||a.von.localeCompare(b.von));
@@ -1135,21 +1141,22 @@ function vStundenplan(){
  }
  const days=[0,1,2,3,4].map(i=>{const ds=iso(addD(mon,i)),inf=dayInfo(ds);return{ds:ds,inf:inf,ls:lessonsOn(ds)}});
  const all=[].concat(...days.map(d=>d.ls));
- const t0=Math.min(7*60+30,...all.map(l=>minOf(l.von)))-(all.length?15:0),t1=Math.max(14*60,...all.map(l=>minOf(l.bis)))+15;
+ const zm=S.zeiten.map(z=>[minOf(z[0]),minOf(z[1])]);
+ const t0=Math.min(7*60+30,...zm.map(z=>z[0]),...all.map(l=>minOf(l.von)))-15,t1=Math.max(14*60,...zm.map(z=>z[1]),...all.map(l=>minOf(l.bis)))+15;
  const a=Math.floor(t0/60)*60,b=Math.ceil(t1/60)*60,PX=1.15,H=(b-a)*PX,nowM=new Date().getHours()*60+new Date().getMinutes();
  const hrs=[];for(let m=a;m<=b;m+=60)hrs.push(m);
  h+=`<div class="ttw"><div class="tt"><div></div>${days.map((d,i)=>`<div class="tt-hd ${d.ds===td?'today':''}"><span>${DAYS[i]} <span class="sub">${dshort(d.ds)}</span></span><button class="ghost" title="Eintrag an diesem Tag" onclick="terminModal(null,'${d.ds}')">+</button></div>`).join('')}
- <div class="tt-ax" style="height:${H}px">${hrs.map(m=>`<span style="top:${(m-a)*PX}px">${String(m/60).padStart(2,'0')}:00</span>`).join('')}</div>`;
+ <div class="tt-ax" style="height:${H}px">${zm.length?zm.map((z,i)=>`<em class="tt-bn" style="top:${(z[0]-a)*PX}px;height:${(z[1]-z[0])*PX}px"><span>${S.zeiten[i][0]}</span><b>${i+1}.</b><span>${S.zeiten[i][1]}</span></em>`).join(''):hrs.map(m=>`<span style="top:${(m-a)*PX}px">${String(m/60).padStart(2,'0')}:00</span>`).join('')}</div>`;
  days.forEach(d=>{
   const free=d.inf.feiertag||d.inf.ferien,lanes=[];
   d.ls.forEach(l=>{let k=lanes.findIndex(e=>e<=minOf(l.von));if(k<0){k=lanes.length;lanes.push(0)}lanes[k]=minOf(l.bis);l.lane=k});
   const n=Math.max(1,lanes.length);
-  h+=`<div class="tt-c ${d.inf.feiertag?'fe':d.inf.ferien?'fr':''}" style="height:${H}px">${hrs.map(m=>`<i style="top:${(m-a)*PX}px"></i>`).join('')}${free?`<span class="free tag ${d.inf.feiertag?'fe':'fr'}">${esc(free)}</span>`:''}
+  h+=`<div class="tt-c ${d.inf.feiertag?'fe':d.inf.ferien?'fr':''}" style="height:${H}px">${zm.map(z=>`<div class="tt-r" style="top:${(z[0]-a)*PX}px;height:${(z[1]-z[0])*PX}px"></div>`).join('')}${free?`<span class="free tag ${d.inf.feiertag?'fe':'fr'}">${esc(free)}</span>`:''}
   ${d.ls.map(l=>{const top=(minOf(l.von)-a)*PX,ht=Math.max(30,(minOf(l.bis)-minOf(l.von))*PX-2),now=d.ds===td&&nowM>=minOf(l.von)&&nowM<=minOf(l.bis),pl=S.planung[l.key];
    return `<div class="tt-b ${now?'now':''} ${l.t?'':'ras'} ${ht<44?'sm':''}" style="top:${top}px;height:${ht}px;left:calc(${l.lane*100/n}% + 3px);width:calc(${100/n}% - 6px)" onclick="lesModal('${d.ds}','${l.key}')" title="${l.von}–${l.bis} ${l.k?esc(l.k.name+' '+l.k.fach):esc(l.titel||'')}">
-   <b>${l.k?esc(l.k.name):esc(l.titel||'Termin')}</b><span>${l.von}–${l.bis}</span>${l.k?`<span>${esc(l.k.fach)}${l.titel?' · '+esc(l.titel):''}</span>`:''}${l.raum?`<span>${esc(l.raum)}</span>`:''}${pl?`<span>📝 ${esc(pl)}</span>`:''}</div>`}).join('')}</div>`;
+   <b>${l.k?esc(l.k.name):esc(l.titel||'Termin')}</b><span>${l.von}–${l.bis}</span>${l.k?`<span>${esc(l.titel||l.k.fach)}</span>`:''}${l.raum?`<span>${esc(l.raum)}</span>`:''}${pl?`<span>📝 ${esc(pl)}</span>`:''}</div>`}).join('')}</div>`;
  });
- return h+`</div></div><div class="sub" style="margin-top:10px">Stunde antippen für die Planung. Gestrichelte Stunden kommen aus dem Stundenraster in den Einstellungen.</div>`;
+ return h+`</div></div><div class="sub" style="margin-top:10px">Stunde antippen für die Planung. Die grauen Bänder sind die Blöcke deines Stundenrasters. Gestrichelte Stunden kommen aus dem festen Raster in den Einstellungen.</div>`;
 }
 /* Eine Stunde: Planung und Aktionen */
 function lesModal(ds,key){
@@ -1201,6 +1208,131 @@ function terminSave(id){
 function terminDel(id){ask('Eintrag mit allen Terminen löschen?',()=>{S.termine=S.termine.filter(x=>x.id!==id);save();render()})}
 function terminAusReset(id){S.termine.find(x=>x.id===id).aus=[];save();terminModal(id)}
 
+/* ---------- Stundenplan aus PDF (z. B. Untis-Lehrerplan): Tage als Spalten, Stunden als Zeilen ---------- */
+let SPI=null;
+const DAYKEY=['mo','di','mi','do','fr','sa'];
+const HJT=[['','ganzes Jahr'],['1','1. Halbjahr'],['2','2. Halbjahr']];
+const isoDE=s=>{const m=String(s||'').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):''};
+function sjDefault(){
+ const sj=S.set.sj||{},t=iso(new Date()),y=+t.slice(0,4)-(+t.slice(5,7)<8?1:0);
+ const sf=FERIEN.find(f=>f[2]==='Sommerferien'&&f[0].startsWith(String(y))),start=sf?iso(addD(new Date(sf[1]+'T00:00:00'),1)):y+'-08-15';
+ return {start:sj.start||start,hj:sj.hj||(y+1)+'-02-01',ende:sj.ende||sjEnde(start)};
+}
+function spModal(){
+ SPI={};
+ modal(`<h2>Stundenplan aus PDF übernehmen</h2>
+ <div class="sub">Lade deinen Stundenplan als PDF hoch, z. B. aus Untis. Die App erkennt Tage, Stunden, Klasse, Fach, Raum und Halbjahr. Je ${S.set.spb||2} Stunden der PDF ergeben einen Block deines Stundenrasters. Die Datei bleibt auf diesem Gerät.</div>
+ <label>PDF oder Foto<input type="file" id="sp_f" accept=".pdf,application/pdf,image/*"></label>
+ <label class="chk"><input type="checkbox" id="sp_o"> Texterkennung erzwingen (für eingescannte Pläne)</label>
+ <div class="sub" id="im_s"></div>
+ <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="spRead()">Einlesen</button></div>`);
+}
+async function spRead(){
+ const f=$('#sp_f').files[0];if(!f)return imStat('Bitte eine Datei wählen.');
+ try{
+  let pages;
+  if(f.type.startsWith('image/'))pages=[await ocrImages([f])];
+  else{
+   imStat('PDF wird gelesen …');await loadJS(LIB.pdf);pdfjsLib.GlobalWorkerOptions.workerSrc=LIB.pdfw;
+   const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;pages=[];let chars=0;
+   for(let p=1;p<=doc.numPages;p++){const pg=await doc.getPage(p),vh=pg.getViewport({scale:1}).height,tc=await pg.getTextContent(),ws=[];
+    tc.items.forEach(it=>{const s=it.str.trim();if(!s)return;chars+=s.length;const tr=it.transform,h=it.height||Math.hypot(tr[2],tr[3])||9;ws.push({t:s,x0:tr[4],x1:tr[4]+(it.width||s.length*h*0.5),y:vh-tr[5],h:h})});pages.push(ws)}
+   if($('#sp_o').checked||chars<20*doc.numPages){pages=[];
+    for(let p=1;p<=doc.numPages;p++){imStat(`Seite ${p} wird für die Texterkennung vorbereitet …`);const pg=await doc.getPage(p),vp=pg.getViewport({scale:2.5}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;pages.push((await ocrImages([c])).map(w=>Object.assign(w,{y:w.y+w.h/2})))}}
+  }
+  const out=[];let range=null;
+  pages.forEach(ws=>{const r=spParse(ws);if(r){out.push(...r.cards);range=range||r.range}});
+  if(!out.length)return imStat('Im Plan wurden keine Stunden erkannt. Sind die Tage (Mo–Fr) und die Stundennummern am Rand lesbar?');
+  const d=sjDefault();
+  SPI={rows:out,start:range&&range[0]||d.start,ende:range&&range[1]||d.ende,hj:d.hj,repl:true,neu:true};
+  if(range&&range[0]){const y=+range[0].slice(0,4)+(+range[0].slice(5,7)>=8?1:0);if(!(S.set.sj&&S.set.sj.hj))SPI.hj=y+'-02-01'}
+  spPreview();
+ }catch(e){imStat('Fehler: '+(e&&e.message||e))}
+}
+const med=a=>{const s=a.slice().sort((x,y)=>x-y);return s.length?s[Math.floor(s.length/2)]:0};
+function spParse(ws){
+ /* Kopfzeile mit den Tagen */
+ const dh=ws.filter(w=>DAYKEY.includes(w.t.toLowerCase().replace(/\.$/,'').slice(0,2))&&w.t.replace(/\.$/,'').length<=10);
+ let best=[];dh.forEach(a=>{const g=dh.filter(b=>Math.abs(b.y-a.y)<a.h);if(g.length>best.length)best=g});
+ if(best.length<3)return null;
+ const hy=med(best.map(w=>w.y)),days=best.map(w=>({i:DAYKEY.indexOf(w.t.toLowerCase().slice(0,2)),c:(w.x0+w.x1)/2})).sort((a,b)=>a.c-b.c);
+ const gap=med(days.slice(1).map((d,i)=>d.c-days[i].c))||80,left=days[0].c-gap/2;
+ const dayOf=x=>{let k=-1,bd=1e9;days.forEach((d,i)=>{const dd=Math.abs(x-d.c);if(dd<bd){bd=dd;k=i}});return bd<=gap*0.62?days[k].i:-1};
+ /* Stundennummern am linken Rand */
+ const rl=ws.filter(w=>/^\d{1,2}\.?$/.test(w.t)&&w.x1<=left+gap*0.1&&w.y>hy).map(w=>({n:parseInt(w.t),y:w.y,w:w})).sort((a,b)=>a.y-b.y);
+ const rows=[];rl.forEach(r=>{if(!rows.length||r.n===rows[rows.length-1].n+1)rows.push(r)});
+ if(rows.length<2)return null;
+ const rh=med(rows.slice(1).map((r,i)=>r.y-rows[i].y)),rowOf=y=>{let k=0;rows.forEach((r,i)=>{if(y>=r.y-rh*0.75)k=i});return rows[k].n};
+ const bottom=rows[rows.length-1].y+rh*0.6,lab=new Set(rows.map(r=>r.w));
+ /* Text im Raster zu Karten gruppieren: gleiche linke Kante oder gleiche Mitte, untereinander */
+ const it=ws.filter(w=>!lab.has(w)&&w.y>hy+rh*0.4&&w.y<bottom&&w.x0>=left-gap*0.05&&dayOf((w.x0+w.x1)/2)>=0).map(w=>Object.assign({},w,{d:dayOf((w.x0+w.x1)/2),c:(w.x0+w.x1)/2}));
+ const tol=med(it.map(w=>w.h))*0.45||4,grp=[];
+ it.forEach(w=>{let g=grp.find(g=>g.d===w.d&&g.some(o=>Math.abs(o.x0-w.x0)<tol||Math.abs(o.c-w.c)<tol));if(g)g.push(w);else grp.push(Object.assign([w],{d:w.d}))});
+ const gaps=[];grp.forEach(g=>{g.sort((a,b)=>a.y-b.y);g.slice(1).forEach((w,i)=>gaps.push(w.y-g[i].y))});
+ const lg=med(gaps.filter(x=>x>0))||10,cls=/^([A-ZÄÖÜ]{1,8}\s?\d{1,4}[A-Za-z]{0,3}|\d{1,2}\s?[a-zA-Z]{1,3})\.?$/;
+ const cards=[];
+ grp.forEach(g=>{let cur=null;g.forEach(w=>{const dy=cur?w.y-cur[cur.length-1].y:0;
+  if(!cur||dy>lg*1.3||(cls.test(w.t)&&cur.length>=4)){cur=[w];cur.d=g.d;cards.push(cur)}else cur.push(w)})});
+ const res=cards.map(c=>{
+  const o={on:true,tag:c.d,p1:rowOf(c[0].y),p2:rowOf(c[c.length-1].y),klasse:'',fach:'',raum:'',hj:''},rest=[];
+  c.forEach((w,i)=>{const t=w.t.trim(),hm=t.match(/^([12])\s?\.?\s?(hj|halbj)/i);
+   if(hm)o.hj=hm[1];else if(i===0&&cls.test(t))o.klasse=t.replace(/\.$/,'');else rest.push(t)});
+  rest.forEach(t=>{if(!o.raum&&/^[A-Z]{0,3}\s?-?\d{2,4}[a-z]?$|raum|halle|aula|labor/i.test(t)&&(o.fach||rest.length===1||/\d/.test(t)))o.raum=t;else if(!o.fach)o.fach=t;else if(!o.raum)o.raum=t;else o.fach+=' '+t});
+  const spb=S.set.spb||2;o.b1=Math.floor((o.p1-1)/spb);o.b2=Math.floor((o.p2-1)/spb);
+  return o;
+ }).filter(o=>o.klasse||o.fach);
+ res.sort((a,b)=>a.tag-b.tag||a.p1-b.p1);
+ const txt=ws.slice().sort((a,b)=>a.y-b.y||a.x0-b.x0).map(w=>w.t).join(' '),m=txt.match(/(\d{1,2}\.\d{1,2}\.\d{4})[^–-]{0,12}[–-]\s*(\d{1,2}\.\d{1,2}\.\d{4})/);
+ return {cards:res,range:m?[isoDE(m[1]),isoDE(m[2])]:null};
+}
+const spKid=n=>{n=String(n||'').trim().replace(/\.$/,'').toUpperCase();const k=S.klassen.find(k=>k.name.trim().replace(/\.$/,'').toUpperCase()===n);return k?k.id:''};
+function spCheck(k,r){
+ if(k==='klasse')return !r.klasse.trim();
+ if(k==='b1')return !(S.zeiten[r.b1]&&S.zeiten[r.b2]);
+ if(k==='tag')return r.tag<0;
+ return false;
+}
+const spBad=()=>SPI.rows.filter(r=>r.on).reduce((n,r)=>n+['klasse','b1','tag'].filter(k=>spCheck(k,r)).length,0);
+function spSet(i,k,el){const r=SPI.rows[i];if(k==='b1'){const n=Math.max(0,r.b2-r.b1);r.b1=+el.value;r.b2=Math.min(S.zeiten.length-1,r.b1+n)}else r[k]=k==='tag'?+el.value:el.value;el.classList.toggle('bad',spCheck(k,r));SPI.force=false;spCnt();if(k==='klasse'){const t=el.closest('td').querySelector('.tag');if(t)t.style.display=spKid(r.klasse)?'none':''}}
+function spCnt(){const e=$('#im_c');if(!e)return;const n=spBad(),on=SPI.rows.filter(r=>r.on).length;e.innerHTML=(n?`<span class="bad-l"></span> ${n} ${n===1?'Feld ist':'Felder sind'} rot markiert, bitte prüfen. `:'')+on+' von '+SPI.rows.length+' Stunden ausgewählt.'}
+function spPreview(){
+ SPI.force=false;
+ const zs=S.zeiten.map((z,i)=>`<option value="${i}">${i+1}. Block ${z[0]}–${z[1]}</option>`).join('');
+ modal(`<h2>Stundenplan prüfen <span class="sub">${SPI.rows.length} Stunden erkannt</span></h2>
+ <div class="sub">Felder antippen zum Korrigieren. Abgewählte Zeilen werden nicht übernommen. „neu“ heißt: Die Klasse gibt es noch nicht.</div><div class="sub" id="im_c" style="margin-top:4px"></div>
+ <div class="two" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label>Schuljahr ab<input type="date" value="${SPI.start}" onchange="SPI.start=this.value"></label><label>2. Halbjahr ab<input type="date" value="${SPI.hj}" onchange="SPI.hj=this.value"></label><label>Schuljahr bis<input type="date" value="${SPI.ende}" onchange="SPI.ende=this.value"></label></div>
+ <div class="imt" style="margin-top:12px"><table><tr><th></th><th>Tag</th><th>Block</th><th>Klasse</th><th>Fach</th><th>Raum</th><th>Halbjahr</th></tr>
+ ${SPI.rows.map((r,i)=>`<tr class="${r.on?'':'off'}"><td><input type="checkbox" ${r.on?'checked':''} onchange="SPI.rows[${i}].on=this.checked;this.closest('tr').className=this.checked?'':'off';spCnt()"></td>
+ <td><select class="${spCheck('tag',r)?'bad':''}" onchange="spSet(${i},'tag',this)">${DAYS.map((d,j)=>`<option value="${j}" ${r.tag===j?'selected':''}>${d}</option>`).join('')}</select></td>
+ <td><select class="${spCheck('b1',r)?'bad':''}" onchange="spSet(${i},'b1',this)">${S.zeiten[r.b1]?'':`<option selected>Std. ${r.p1}–${r.p2}?</option>`}${zs.replace(`value="${r.b1}"`,`value="${r.b1}" selected`)}</select>${r.b2>r.b1?`<div class="sub">bis ${r.b2+1}. Block</div>`:''}</td>
+ <td><input class="${spCheck('klasse',r)?'bad':''}" value="${esc(r.klasse)}" oninput="spSet(${i},'klasse',this)"><span class="tag ac neu" style="${spKid(r.klasse)?'display:none':''}">neu</span></td>
+ <td><input value="${esc(r.fach)}" oninput="SPI.rows[${i}].fach=this.value"></td><td><input value="${esc(r.raum)}" oninput="SPI.rows[${i}].raum=this.value"></td>
+ <td><select onchange="SPI.rows[${i}].hj=this.value">${HJT.map(h=>`<option value="${h[0]}" ${r.hj===h[0]?'selected':''}>${h[1]}</option>`).join('')}</select></td></tr>`).join('')}</table></div>
+ <label class="chk"><input type="checkbox" ${SPI.repl?'checked':''} onchange="SPI.repl=this.checked"> Früher aus PDF übernommenen Stundenplan ersetzen</label>
+ <label class="chk"><input type="checkbox" ${SPI.neu?'checked':''} onchange="SPI.neu=this.checked"> Fehlende Klassen anlegen</label>
+ <div class="sub" id="im_e" style="color:var(--bad);margin-top:10px"></div>
+ <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="spSave()">Übernehmen</button></div>`,'wide');
+ spCnt();
+}
+function spSave(){
+ const rows=SPI.rows.filter(r=>r.on);
+ if(!rows.length)return imErr('Keine Stunden ausgewählt.');
+ if(!SPI.start||!SPI.ende||!SPI.hj||SPI.hj<=SPI.start||SPI.ende<SPI.hj)return imErr('Bitte Schuljahr und 2. Halbjahr prüfen: Beginn < 2. Halbjahr ≤ Ende.');
+ const nb=spBad();if(nb&&!SPI.force){SPI.force=true;return imErr(nb+(nb===1?' Feld ist':' Felder sind')+' noch rot markiert. Tippe noch einmal auf „Übernehmen“, um die übrigen Stunden trotzdem anzulegen.')}
+ S.set.sj={start:SPI.start,hj:SPI.hj,ende:SPI.ende};
+ if(SPI.repl)S.termine=S.termine.filter(t=>t.src!=='pdf');
+ const hjEnd=iso(addD(new Date(SPI.hj+'T00:00:00'),-1));let n=0,nk=0;
+ rows.forEach(r=>{
+  if(spCheck('klasse',r)||spCheck('b1',r)||spCheck('tag',r))return;
+  let kid=spKid(r.klasse);
+  if(!kid){if(!SPI.neu)return;kid=uid();S.klassen.push({id:kid,name:r.klasse.trim().replace(/\.$/,''),fach:r.fach.trim()||S.set.faecher[0]||''});S.sitz[kid]=[];nk++}
+  const st=r.hj==='2'?SPI.hj:SPI.start,en=r.hj==='1'?hjEnd:SPI.ende,first=iso(addD(new Date(st+'T00:00:00'),(r.tag-wdOf(st)+7)%7));
+  S.termine.push({id:uid(),src:'pdf',kid:kid,titel:r.fach.trim(),raum:r.raum.trim(),von:S.zeiten[r.b1][0],bis:S.zeiten[r.b2][1],wdh:'woechentlich',tage:[r.tag],start:first,ende:en,ferien:true,aus:[]});n++;
+ });
+ save();closeModal();SPI=null;go({tab:'woche',spv:'woche',week:0});
+ info(n+(n===1?' Stunde':' Stunden')+' übernommen'+(nk?', '+nk+(nk===1?' Klasse':' Klassen')+' neu angelegt':'')+'.');
+}
+
 /* ---------- Mehr ---------- */
 function vMehr(){
  const th=getTheme();
@@ -1211,6 +1343,8 @@ function vMehr(){
   h+=`</tr>`;
  });
  h+=`</table></div></div><div class="stack">
+ <div class="card"><h2>Schuljahr</h2><div class="sub">Gilt für das 1. und 2. Halbjahr im Stundenplan und für „bis Halbjahresende“ bzw. „bis Schuljahresende“.</div>
+ <div class="two" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label>Beginn<input type="date" value="${sjDefault().start}" onchange="sjSet('start',this.value)"></label><label>2. Halbjahr ab<input type="date" value="${sjDefault().hj}" onchange="sjSet('hj',this.value)"></label><label>Ende<input type="date" value="${sjDefault().ende}" onchange="sjSet('ende',this.value)"></label></div></div>
  <div class="card"><h2>Darstellung</h2><div class="seg" style="margin:0"><button class="${th==='light'?'on':''}" onclick="setTheme('light')">Hell</button><button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">Dunkel</button><button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">System</button></div></div>
  <div class="card"><h2>Noten</h2><div class="sub">Voreinstellung 50/50.</div><label>Gewicht schriftlich in Prozent (mündlich: Rest)<input type="number" min="0" max="100" value="${S.set.gew}" oninput="S.set.gew=Math.min(100,Math.max(0,+this.value||0));save()"></label>
  <label>Schriftliche Arten (mit Komma trennen)<textarea class="grow" rows="1" onchange="setList('katS',this.value)">${esc(S.set.katS.join(', '))}</textarea></label>
@@ -1226,6 +1360,7 @@ function vMehr(){
  <button class="btn dng" onclick="ask('Wirklich alles löschen?',()=>{fotoClear();S=emptyState();save();go({tab:'heute'})})">Alles löschen, leer starten</button></div></div></div>`;
  return h;
 }
+function sjSet(k,v){S.set.sj=Object.assign(sjDefault(),S.set.sj||{});S.set.sj[k]=v;save()}
 function setPlan(t,i,v){if(v)S.plan[t+'-'+i]=v;else delete S.plan[t+'-'+i];save()}
 function fachAdd(){const v=$('#f_n').value.trim();if(!v||S.set.faecher.includes(v))return;S.set.faecher.push(v);save();render()}
 function fachRen(i,v){v=v.trim();const o=S.set.faecher[i];if(!v||v===o){render();return}S.set.faecher[i]=v;S.klassen.forEach(k=>{if(k.fach===o)k.fach=v});save();render()}
