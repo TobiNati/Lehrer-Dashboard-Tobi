@@ -586,7 +586,13 @@ function initTop(){
  if(document.addEventListener){
   document.addEventListener('keydown',e=>{
    if(e.key==='Escape'&&($('#modal').innerHTML||'').length)closeModal();
-   if(e.key==='Enter'&&e.target&&e.target.tagName==='INPUT'&&e.target.closest&&e.target.closest('#modal')&&e.target.type!=='file'){const b=$('#modal .pri');if(b){e.preventDefault();b.click()}}
+   /* Enter löst im offenen Fenster den lila Knopf aus; mehrzeilige Felder, Auswahllisten und angesteuerte Knöpfe im Fenster behalten ihr normales Verhalten */
+   if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&($('#modal').innerHTML||'').length){
+    const t=e.target||{},tg=t.tagName,inM=!!(t.closest&&t.closest('#modal'));
+    if(inM&&((tg==='TEXTAREA'&&t.getAttribute('rows')!=='1')||tg==='SELECT'||tg==='BUTTON'||tg==='A'||t.type==='file'))return;
+    const l=document.querySelectorAll('#modal .btns .pri'),btn=l.length?l[l.length-1]:$('#modal .pri');
+    if(btn){e.preventDefault();btn.click()}
+   }
   });
  }
  $('#top').innerHTML=`<div class="gs">${ic('search')}<input id="gq" type="search" placeholder="Suchen" autocomplete="off" oninput="gSearch()" onfocus="gSearch()" onkeydown="gKey(event)"><div id="gr" class="gr"></div></div>`;
