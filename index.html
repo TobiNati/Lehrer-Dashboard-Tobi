@@ -345,25 +345,25 @@ function seed(){
  let r=7;const rnd=()=>{r=(r*9301+49297)%233280;return r/233280};
  const VN=['Lena','Ben','Mia','Noah','Emma','Paul','Sofia','Leon','Anna','Finn','Lara','Elias'];
  const NN=['Mustermann','Beispiel','Probst','Bergmann','Lindner','Sommer','Winter','Krause','Fuchs','Roth','Vogel','Maier'];
+ const BT=['Musterbau GmbH','Beispiel AG','Werkstatt Sommer','Autohaus Probst KG'];
  const K=[{id:'k1',name:'7a',fach:'Englisch'},{id:'k2',name:'8c',fach:'Englisch'},{id:'k3',name:'9b',fach:'Geschichte'}];
  const sch=[];
  K.forEach((k,ki)=>{for(let i=0;i<8;i++){
-  const s={id:uid(),klasse:k.id,vn:VN[(i+ki*3)%12],nn:NN[(i*5+ki*2)%12],tel:'0170 '+(1000000+Math.floor(rnd()*8999999)),adr:'Musterweg '+(1+i)+', 12345 Musterstadt',eltern:'',geb:'',mail:'',ziel:'',stand:'',vereinb:[],noten:[],krank:[],unent:[],notizen:[],zeugnis:''};
+  const s={id:uid(),klasse:k.id,vn:VN[(i+ki*3)%12],nn:NN[(i*5+ki*2)%12],tel:'0170 '+(1000000+Math.floor(rnd()*8999999)),betrieb:BT[(i+ki)%BT.length],mail:'',ziel:'',stand:'',noten:[],krank:[],unent:[],notizen:[]};
   const ns=2+Math.floor(rnd()*3),nm=2+Math.floor(rnd()*4);
   for(let j=0;j<ns;j++)s.noten.push({id:uid(),typ:'s',kat:j%2?'Test':'Klassenarbeit',w:NOTEN[2+Math.floor(rnd()*10)][1],d:daysAgo(10+j*14),n:''});
   for(let j=0;j<nm;j++)s.noten.push({id:uid(),typ:'m',kat:j%2?'Vortrag':'Mitarbeit',w:NOTEN[2+Math.floor(rnd()*9)][1],d:daysAgo(3+j*9),n:''});
   sch.push(s)}});
  const s0=sch.find(s=>s.klasse==='k2');
  s0.ziel='Freier sprechen, weniger Angst vor Fehlern';s0.stand='Unit 3, Hörtexte mit Aufgaben';
- s0.vereinb.push({d:daysAgo(14),mit:'s',t:'Hörverstehen gezielt schulen'});s0.notizen.push({id:uid(),d:daysAgo(2),f:daysAgo(-2),t:'Elterngespräch vorbereiten',done:false});
+ s0.notizen.push({id:uid(),d:daysAgo(2),f:daysAgo(-2),t:'Ausbildungsnachweis prüfen',done:false});
  sch.filter(s=>s.klasse==='k1')[2].krank.push(iso(new Date()));
  const sitz={};K.forEach(k=>{sitz[k.id]=autoLayout(sch.filter(s=>s.klasse===k.id).map(s=>s.id))});
  return{klassen:K,schueler:sch,
-  auftraege:[{id:uid(),titel:'Workbook S. 42',faellig:daysAgo(-3),klassen:['k1','k2'],schueler:[],done:{}},{id:uid(),titel:'Unterschrift Eltern',faellig:daysAgo(-7),klassen:['k2'],schueler:[],done:{}}],
   plan:{'0-0':'k1','0-1':'k3','0-3':'k2','0-5':'k1','1-0':'k2','1-2':'k1','1-4':'k3','2-1':'k1','2-3':'k2','2-5':'k3','3-0':'k3','3-2':'k2','3-3':'k1','4-1':'k2','4-2':'k3','4-4':'k1'},
   planung:{},sitz:sitz,
   zeiten:[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']],
-  set:{gew:50,katS:['Klassenarbeit','Test','Vokabeltest'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null}};
+  set:{gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null}};
 }
 
 
@@ -420,16 +420,15 @@ function feBind(){
 function feSave(){if(!FE)return info('Bitte zuerst ein Foto auswählen.');fotoPut(FES,FE);closeModal();render()}
 function feRemove(){fotoDel(FES);closeModal();render()}
 function normalize(d){
- d.klassen=d.klassen||[];d.schueler=d.schueler||[];d.auftraege=d.auftraege||[];d.plan=d.plan||{};d.planung=d.planung||{};d.sitz=d.sitz||{};
+ d.klassen=d.klassen||[];d.schueler=d.schueler||[];delete d.auftraege;d.plan=d.plan||{};d.planung=d.planung||{};d.sitz=d.sitz||{};
  if(!d.zeiten||!d.zeiten.length)d.zeiten=[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']];
- d.set=Object.assign({gew:50,katS:['Klassenarbeit','Test','Vokabeltest'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null},d.set||{});
- d.schueler.forEach(s=>{s.noten=s.noten||[];s.krank=s.krank||[];s.unent=s.unent||[];s.vereinb=s.vereinb||[];s.notizen=s.notizen||[];s.vereinb.forEach(v=>{if(!v.mit)v.mit='s'});['vn','nn','tel','adr','eltern','ziel','stand','zeugnis','geb','mail'].forEach(k=>{if(s[k]==null)s[k]=''})});
- d.auftraege.forEach(a=>{a.klassen=a.klassen||[];a.schueler=a.schueler||[];a.done=a.done||{}});
+ d.set=Object.assign({gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null},d.set||{});
+ d.schueler.forEach(s=>{s.noten=s.noten||[];s.krank=s.krank||[];s.unent=s.unent||[];s.notizen=s.notizen||[];['vn','nn','tel','betrieb','mail','ziel','stand'].forEach(k=>{if(s[k]==null)s[k]=''})});
  d.klassen.forEach(k=>{if(!d.sitz[k.id])d.sitz[k.id]=[]});
  return d;
 }
 let S=normalize(load()||seed());
-let V={tab:'heute',q:'',qk:'',back:null,klasse:null,ktab:'schueler',schueler:null,auftrag:null,week:0,year:new Date().getFullYear(),ntab:'liste'};
+let V={tab:'heute',q:'',qk:'',back:null,klasse:null,ktab:'schueler',schueler:null,week:0,year:new Date().getFullYear(),ntab:'liste'};
 const kl=id=>S.klassen.find(k=>k.id===id);
 const sc=id=>S.schueler.find(s=>s.id===id);
 const nameOf=s=>s.vn+' '+s.nn;
@@ -440,25 +439,20 @@ function stats(s){
  return{a:a,b:b,g:g};
 }
 const klasseStudents=kid=>S.schueler.filter(s=>s.klasse===kid).sort((a,b)=>a.nn.localeCompare(b.nn,'de'));
-const applies=(a,s)=>a.klassen.includes(s.klasse)||(a.schueler||[]).includes(s.id);
-const auftraegeFor=s=>S.auftraege.filter(a=>applies(a,s));
-const aKlassen=a=>[...new Set(a.klassen.concat((a.schueler||[]).map(i=>sc(i)?sc(i).klasse:'')))].map(kl).filter(Boolean);
-function faelligTag(f){if(!f)return '<span class="tag">ohne Datum</span>';const x=dueDays(f);return `<span class="tag ${x<0?'bad':x===0?'warn':''}">${x<0?'überfällig seit ':x===0?'heute fällig, ':'fällig '}${dshort(f)}</span>`}
-const offenFuer=kid=>S.auftraege.map(a=>({a:a,n:klasseStudents(kid).filter(s=>applies(a,s)&&!a.done[s.id]).length})).filter(o=>o.n>0).sort((x,y)=>(x.a.faellig||'9999').localeCompare(y.a.faellig||'9999'));
 
 function go(p){
  if(!('back' in p))V.back=null;Object.assign(V,p);render();window.scrollTo(0,0);
  const a=$('#app');if(a&&a.classList){a.classList.remove('enter');void a.offsetWidth;a.classList.add('enter');clearTimeout(go._t);go._t=setTimeout(()=>a.classList.remove('enter'),320)}
 }
 function render(){
- const t={heute:vHeute,klassen:vKlassen,schueler:vSchuelerAlle,auftraege:vAuftraege,woche:vWoche,kalender:vKalender,mehr:vMehr}[V.tab];
+ const t={heute:vHeute,klassen:vKlassen,schueler:vSchuelerAlle,woche:vWoche,kalender:vKalender,mehr:vMehr}[V.tab];
  $('#app').innerHTML=remindHtml()+(AB.h&&!AB.perm?`<div class="ban">Die automatische Sicherung ist pausiert. <button class="mini" onclick="abResume()">Fortsetzen</button></div>`:'')+(_fail?`<div class="ban fe">Speichern im Browser ist nicht möglich (Speicher voll oder gesperrt). Bitte jetzt eine Sicherung exportieren.</div>`:'')+t();
- const items=[['heute','home','Heute'],['klassen','users','Klassen'],['schueler','user','SchülerInnen'],['auftraege','task','Aufträge'],['woche','cal','Woche'],['kalender','cal2','Kalender']];
+ const items=[['heute','home','Heute'],['klassen','users','Klassen'],['schueler','user','SchülerInnen'],['woche','cal','Woche'],['kalender','cal2','Kalender']];
  const le=S.set.letzterExport;
  $('#side').innerHTML=`<div class="brand"><div class="logo">${ic('cap')}</div><span>Lehrer-Dashboard</span></div>`
- +items.map(a=>`<button class="nv ${V.tab===a[0]?'on':''}" onclick="go({tab:'${a[0]}',klasse:null,schueler:null,auftrag:null,ktab:'schueler'})">${ic(a[1])}<span>${a[2]}</span></button>`).join('')
+ +items.map(a=>`<button class="nv ${V.tab===a[0]?'on':''}" onclick="go({tab:'${a[0]}',klasse:null,schueler:null,ktab:'schueler'})">${ic(a[1])}<span>${a[2]}</span></button>`).join('')
  +`<div class="sec">Meine Klassen</div>`+S.klassen.map(k=>`<button class="nv k ${V.tab==='klassen'&&V.klasse===k.id?'on':''}" onclick="go({tab:'klassen',klasse:'${k.id}',schueler:null,ktab:'schueler'})"><span>${esc(k.name)}</span><small>${esc(k.fach)}</small></button>`).join('')
- +`<div class="sidebot"><button class="nv ${V.tab==='mehr'?'on':''}" onclick="go({tab:'mehr',klasse:null,schueler:null,auftrag:null,ktab:'schueler'})">${ic('cog')}<span>Einstellungen</span></button><div class="sidefoot">Sicherung: ${le?dshort(le):'noch nie'}<button onclick="exportJ()">Jetzt exportieren</button></div></div>`;
+ +`<div class="sidebot"><button class="nv ${V.tab==='mehr'?'on':''}" onclick="go({tab:'mehr',klasse:null,schueler:null,ktab:'schueler'})">${ic('cog')}<span>Einstellungen</span></button><div class="sidefoot">Sicherung: ${le?dshort(le):'noch nie'}<button onclick="exportJ()">Jetzt exportieren</button></div></div>`;
  if(V.tab==='klassen'&&V.klasse&&!V.schueler&&V.ktab==='sitz')bindSitz();
  growAll();
 }
@@ -483,27 +477,25 @@ function vHeute(){
  const le=S.set.letzterExport,lessons=[],info=dayInfo(t);
  if(tag<5&&!info.feiertag&&!info.ferien)S.zeiten.forEach((z,i)=>{const kid=S.plan[tag+'-'+i];if(kid&&kl(kid))lessons.push({i:i,z:z,k:kl(kid)})});
  const kr=S.schueler.filter(s=>s.krank.includes(t));
- const offen=S.auftraege.map(a=>{const ss=S.schueler.filter(s=>applies(a,s));return{a:a,n:ss.filter(s=>!a.done[s.id]).length,all:ss.length}}).filter(o=>o.n>0);
  let h=`<div class="ph"><div><h1>Guten Tag</h1><div class="sub">${d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div></div>`;
  if(info.feiertag)h+=`<div class="ban fe">Heute ist Feiertag: ${esc(info.feiertag)}. Kein Unterricht.</div>`;
  if(info.ferien)h+=`<div class="ban fr">Heute sind Schulferien: ${esc(info.ferien)}.</div>`;
  if(!le||(new Date()-new Date(le))/864e5>14)h+=`<div class="ban">Sicherung fällig: Exportiere deine Daten über die Seitenleiste oder unter „Einstellungen“.</div>`;
- h+=`<div class="kpis"><div class="kpi"><b>${lessons.length}</b><span>Stunden heute</span></div><div class="kpi"><b>${kr.length}</b><span>Schüler krank</span></div><div class="kpi"><b>${offen.length}</b><span>Offene Aufträge</span></div><div class="kpi"><b>${S.schueler.length}</b><span>Schüler gesamt</span></div></div>`;
+ h+=`<div class="kpis"><div class="kpi"><b>${lessons.length}</b><span>Stunden heute</span></div><div class="kpi"><b>${kr.length}</b><span>Schüler krank</span></div><div class="kpi"><b>${S.schueler.length}</b><span>Schüler gesamt</span></div></div>`;
  h+=`<div class="g2"><div class="card"><h2>Unterricht heute</h2>`;
  h+=lessons.length?lessons.map(l=>{const cur=nowM>=mins(l.z[0])&&nowM<=mins(l.z[1]),key=t+'|'+l.i;
   return `<div class="les ${cur?'cur':''}"><div><b>${l.i+1}. Std</b><div class="t">${l.z[0]}–${l.z[1]}</div></div><div><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(l.k.name)} · ${esc(l.k.fach)}</b>${cur?'<span class="tag ac">jetzt</span>':''}</div>
   <textarea class="grow" rows="1" placeholder="Was ist geplant?" oninput="S.planung['${key}']=this.value;save()">${esc(S.planung[key]||'')}</textarea>
-  ${offenFuer(l.k.id).map(o=>`<div class="row click" style="padding:6px 0" onclick="go({tab:'auftraege',auftrag:'${o.a.id}'})"><span>${esc(o.a.titel)} <span class="sub">${o.n} offen</span></span>${faelligTag(o.a.faellig)}</div>`).join('')}
   <div style="margin-top:6px"><button class="pri" onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'sitz',schueler:null})">Sitzplan und mündliche Noten</button> <button onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'schueler',schueler:null})">Schülerliste</button></div></div></div>`}).join(''):'<div class="sub">'+(info.feiertag||info.ferien?'Heute kein Unterricht: '+esc(info.feiertag||info.ferien)+'.':'Heute kein Unterricht im Stundenplan.')+'</div>';
  const nz=[];S.schueler.forEach(s=>s.notizen.forEach(n=>{if(!n.done&&n.f&&dueDays(n.f)<=7)nz.push({s:s,n:n})}));nz.sort((a,b)=>a.n.f.localeCompare(b.n.f));
  h+=`</div><div class="stack">`+(nz.length?`<div class="card"><h2>Fällige Notizen</h2>`+nz.map(o=>`<div class="row click" onclick="go({tab:'klassen',klasse:'${o.s.klasse}',schueler:'${o.s.id}'})"><span><b>${esc(nameOf(o.s))}</b> <span class="sub">${esc(o.n.t.slice(0,60))}</span></span>${dueTag(o.n)}</div>`).join('')+`</div>`:'')+`<div class="card"><h2>Krank heute</h2>`+(kr.length?kr.map(s=>`<div class="row click" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}'})"><span>${esc(nameOf(s))}</span><span class="tag">${esc(kl(s.klasse).name)}</span></div>`).join(''):'<div class="sub">Niemand krank gemeldet.</div>')+`</div>
- <div class="card"><h2>Offene Aufträge</h2>`+(offen.length?offen.map(o=>`<div class="row click" onclick="go({tab:'auftraege',auftrag:'${o.a.id}'})"><span>${esc(o.a.titel)}<div class="sub">${aKlassen(o.a).map(k=>esc(k.name+' '+k.fach)).join(', ')}${o.a.faellig?' · bis '+dshort(o.a.faellig):''}</div></span><span class="tag warn">${o.n} von ${o.all} offen</span></div>`).join(''):'<div class="sub">Alles erledigt.</div>')+`</div><div class="card"><h2>Nächste Ferien und Feiertage</h2>${naechsteHtml()}</div></div></div>`;
+ <div class="card"><h2>Nächste Ferien und Feiertage</h2>${naechsteHtml()}</div></div></div>`;
  return h;
 }
 
 /* ---------- Klassen ---------- */
 function matchS(s,q){
- const k=kl(s.klasse)||{name:'',fach:''},hay=[s.vn,s.nn,s.nn+', '+s.vn,s.vn+' '+s.nn,k.name,k.fach,s.tel,s.adr,s.eltern,s.mail||''].join(' ').toLowerCase();
+ const k=kl(s.klasse)||{name:'',fach:''},hay=[s.vn,s.nn,s.nn+', '+s.vn,s.vn+' '+s.nn,k.name,k.fach,s.tel,s.betrieb,s.mail].join(' ').toLowerCase();
  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w));
 }
 function sListe(){
@@ -519,7 +511,7 @@ const cnt=()=>{const n=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V
 function sEnter(e){if(e.key!=='Enter')return;const f=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V.q||'')).sort((a,b)=>a.nn.localeCompare(b.nn,'de'))[0];if(f)go({tab:'klassen',klasse:f.klasse,schueler:f.id,back:'alle'})}
 function vSchuelerAlle(){
  return `<div class="ph"><div><h1>SchülerInnen</h1><div class="sub" id="sc">${cnt()}</div></div></div>
- <div class="two" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);margin:0 0 16px"><input id="sq" type="search" placeholder="Suchen nach Name, Klasse, Telefon, Adresse …" value="${esc(V.q)}" oninput="V.q=this.value;sUpdate()" onkeydown="sEnter(event)" autofocus>
+ <div class="two" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);margin:0 0 16px"><input id="sq" type="search" placeholder="Suchen nach Name, Klasse, Betrieb, Telefon …" value="${esc(V.q)}" oninput="V.q=this.value;sUpdate()" onkeydown="sEnter(event)" autofocus>
  <select onchange="V.qk=this.value;sUpdate()"><option value="">Alle Klassen</option>${S.klassen.map(k=>`<option value="${k.id}" ${V.qk===k.id?'selected':''}>${esc(k.name)} · ${esc(k.fach)}</option>`).join('')}</select></div>
  <div class="card" id="sl">${sListe()}</div>`;
 }
@@ -534,10 +526,9 @@ function gSearch(){
  const add=(g,t,sub,fn,tag)=>items.push({g:g,t:t,sub:sub,fn:fn,tag:tag});
  S.klassen.forEach(k=>{if(gHit(k.name+' '+k.fach,tk))add('Klassen',k.name+' · '+k.fach,S.schueler.filter(s=>s.klasse===k.id).length+' Schüler',()=>go({tab:'klassen',klasse:k.id,ktab:'schueler',schueler:null}))});
  S.schueler.filter(s=>matchS(s,q)).forEach(s=>{const k=kl(s.klasse);add('SchülerInnen',nameOf(s),k?k.name+' · '+k.fach:'',()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))});
- S.auftraege.forEach(a=>{const ks=a.klassen.map(i=>kl(i)?kl(i).name:'').filter(Boolean).join(', ');if(gHit(a.titel+' '+ks,tk))add('Aufträge',a.titel,(ks?ks+' · ':'')+(a.faellig?'bis '+dshort(a.faellig):''),()=>go({tab:'auftraege',auftrag:a.id}))});
  [y0,y0+1,y0+2,y0-1].forEach(y=>{const m=feiertage(y);Object.keys(m).forEach(d=>{if(gHit(m[d]+' '+dlong(d),tk))add('Feiertage und Ferien',m[d],dlong(d),()=>go({tab:'kalender',year:y}),'fe')})});
  const t0=iso(new Date());FERIEN.slice().sort((a,b)=>((a[1]<t0)-(b[1]<t0))||a[0].localeCompare(b[0])).forEach(f=>{if(gHit(f[2]+' '+dlong(f[0])+' '+dlong(f[1]),tk))add('Feiertage und Ferien',f[2],f[0]===f[1]?dlong(f[0]):dshort(f[0])+' – '+dlong(f[1]),()=>go({tab:'kalender',year:+f[0].slice(0,4)}),'fr')});
- S.schueler.forEach(s=>{[['Lernziel',s.ziel],['Stand',s.stand],['Zeugnis',s.zeugnis]].concat(s.notizen.map(n=>['Notiz',n.t]),s.vereinb.map(v=>['Vereinbarung mit '+(v.mit==='e'?'Eltern':'Schüler'),v.t])).forEach(x=>{if(x[1]&&gHit(x[1],tk))add('Notizen',nameOf(s)+' · '+x[0],x[1].slice(0,70),()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))})});
+ S.schueler.forEach(s=>{[['Lernziel',s.ziel],['Stand',s.stand],['Betrieb',s.betrieb]].concat(s.notizen.map(n=>['Notiz',n.t])).forEach(x=>{if(x[1]&&gHit(x[1],tk))add('Notizen',nameOf(s)+' · '+x[0],x[1].slice(0,70),()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))})});
  Object.keys(S.planung).forEach(key=>{const t=S.planung[key];if(!t||!gHit(t,tk))return;const p=key.split('|');add('Notizen','Planung '+dshort(p[0])+' · '+(+p[1]+1)+'. Std',t.slice(0,70),()=>go({tab:'woche',week:weekOff(p[0])}))});
  const cnt={},out=items.filter(i=>(cnt[i.g]=(cnt[i.g]||0)+1)<=(i.g==='SchülerInnen'?8:6));
  G.items=out;G.sel=0;
@@ -598,7 +589,7 @@ function kopieModal(kid){
  modal(`<h2>Klasse kopieren</h2><label>Neuer Name<input id="c_n" value="${esc(k.name)}"></label>
  <label>Fach<select id="c_f">${fl.map(f=>`<option ${f===k.fach?'selected':''}>${esc(f)}</option>`).join('')}</select></label>
  <label class="chk"><input type="checkbox" id="c_no"> Noten mitkopieren</label>
- <div class="sub">Stammdaten, Lernziele, Vereinbarungen und Sitzplan werden übernommen, Aufträge und Krankmeldungen nicht.</div>
+ <div class="sub">Stammdaten, Lernziele, Notizen und Sitzplan werden übernommen, Krankmeldungen nicht.</div>
  <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="kopieSave('${kid}')">Kopieren</button></div>`);
 }
 function kopieSave(kid){
@@ -643,21 +634,21 @@ function klasseSave(id){
 function delKlasse(id){ask('Klasse mit allen Schülern löschen?',()=>{
  S.schueler.filter(s=>s.klasse===id).forEach(s=>fotoDel(s.id));S.schueler=S.schueler.filter(s=>s.klasse!==id);S.klassen=S.klassen.filter(k=>k.id!==id);delete S.sitz[id];
  Object.keys(S.plan).forEach(k=>{if(S.plan[k]===id)delete S.plan[k]});
- S.auftraege.forEach(a=>{a.klassen=a.klassen.filter(x=>x!==id)});save();go({klasse:null})})}
+ save();go({klasse:null})})}
 function schuelerModal(kid,id){
- const s=id?sc(id):{vn:'',nn:'',tel:'',adr:'',eltern:'',geb:'',mail:'',klasse:kid};
+ const s=id?sc(id):{vn:'',nn:'',tel:'',betrieb:'',mail:'',klasse:kid};
  modal(`<h2>${id?'Schüler bearbeiten':'Neuer Schüler'}</h2><div class="two"><label>Vorname<input id="m_vn" value="${esc(s.vn)}"></label><label>Nachname<input id="m_nn" value="${esc(s.nn)}"></label></div>
- <div class="two"><label>Geburtsdatum<input id="m_geb" placeholder="TT.MM.JJJJ" value="${esc(s.geb)}"></label><label>Telefon<input id="m_tel" value="${esc(s.tel)}"></label></div><label>E-Mail<input type="email" id="m_mail" value="${esc(s.mail)}"></label><label>Adresse<textarea class="grow" rows="1" id="m_adr">${esc(s.adr)}</textarea></label><label>Eltern, Kontakt<textarea class="grow" rows="1" id="m_el">${esc(s.eltern)}</textarea></label>
+ <label>Betrieb<input id="m_bt" value="${esc(s.betrieb)}"></label><div class="two"><label>E-Mail<input type="email" id="m_mail" value="${esc(s.mail)}"></label><label>Telefon<input id="m_tel" value="${esc(s.tel)}"></label></div>
  ${id?`<label>Klasse<select id="m_k">${S.klassen.map(k=>`<option value="${k.id}" ${k.id===s.klasse?'selected':''}>${esc(k.name)} · ${esc(k.fach)}</option>`).join('')}</select></label>`:''}
  <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="schuelerSave('${kid}','${id||''}')">Speichern</button></div>`);
 }
 function schuelerSave(kid,id){
  const vn=$('#m_vn').value.trim(),nn=$('#m_nn').value.trim();if(!vn&&!nn)return info('Bitte einen Namen eingeben.');
  if(id){
-  const s=sc(id);Object.assign(s,{vn:vn,nn:nn,tel:$('#m_tel').value,adr:$('#m_adr').value,eltern:$('#m_el').value,geb:$('#m_geb').value,mail:$('#m_mail').value});
+  const s=sc(id);Object.assign(s,{vn:vn,nn:nn,tel:$('#m_tel').value,betrieb:$('#m_bt').value,mail:$('#m_mail').value});
   const to=$('#m_k').value;
   if(to!==s.klasse){S.sitz[s.klasse]=(S.sitz[s.klasse]||[]).filter(d=>d.sid!==id);s.klasse=to;addDeskFor(to,id);if(V.schueler===id)V.klasse=to}
- }else S.schueler.push({id:uid(),klasse:kid,vn:vn,nn:nn,tel:$('#m_tel').value,adr:$('#m_adr').value,eltern:$('#m_el').value,geb:$('#m_geb').value,mail:$('#m_mail').value,ziel:'',stand:'',vereinb:[],noten:[],krank:[],unent:[],notizen:[],zeugnis:''});
+ }else S.schueler.push({id:uid(),klasse:kid,vn:vn,nn:nn,tel:$('#m_tel').value,betrieb:$('#m_bt').value,mail:$('#m_mail').value,ziel:'',stand:'',noten:[],krank:[],unent:[],notizen:[]});
  save();closeModal();render();
 }
 
@@ -666,12 +657,12 @@ const LIB={pdf:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.j
  xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',ocr:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'};
 const _js={};
 function loadJS(u){return _js[u]=_js[u]||new Promise((res,rej)=>{const s=document.createElement('script');s.src=u;s.onload=res;s.onerror=()=>{delete _js[u];rej(new Error('Bibliothek konnte nicht geladen werden. Bitte mit dem Internet verbinden.'))};document.head.appendChild(s)})}
-const IMF=[['','ignorieren'],['nn','Nachname'],['vn','Vorname'],['name','Name (Nach- und Vorname)'],['klasse','Klasse'],['geb','Geburtsdatum'],['tel','Telefon'],['mail','E-Mail'],['str','Straße'],['plz','PLZ'],['ort','Ort'],['plzort','PLZ und Ort'],['adr','Adresse komplett'],['eltern','Eltern, Kontakt']];
-const IMC=[['nn','Nachname'],['vn','Vorname'],['klasse','Klasse'],['geb','Geburtsdatum'],['tel','Telefon'],['mail','E-Mail'],['adr','Adresse'],['eltern','Eltern, Kontakt']];
-/* Reihenfolge zählt: „Telefon Mutter“ ist Telefon, „E-Mail Eltern“ ist E-Mail */
-const IMH=[['',/^(nr\.?|lfd\.?( nr\.?)?|#|pos\.?|geschlecht|m\/w|konf|religion|staat|nation|bemerk)/],['mail',/mail/],['tel',/tel|fon|handy|mobil|notfall|phone/],['geb',/geb|geburt/],['plzort',/plz.*ort/],['plz',/^plz|postleitzahl/],['ort',/^(wohn)?ort\b|^stadt|^wohnort/],['str',/stra(ss|ß)e|^str\.?$|hausnummer/],['adr',/anschrift|adresse/],['klasse',/^klasse|^kl\.?$|^lerngruppe|^kurs/],['vn',/vorname|rufname/],['nn',/nachname|familienname|zuname/],['name',/^(name|schüler(in|innen)?|schülername|name des schülers)\b/],['eltern',/eltern|erziehungs|sorgeber|mutter|vater|kontakt|ansprechp/]];
+const IMF=[['','ignorieren'],['nn','Nachname'],['vn','Vorname'],['name','Name (Nach- und Vorname)'],['klasse','Klasse'],['betrieb','Betrieb'],['mail','E-Mail'],['tel','Telefon']];
+const IMC=[['nn','Nachname'],['vn','Vorname'],['klasse','Klasse'],['betrieb','Betrieb'],['mail','E-Mail'],['tel','Telefon']];
+/* Reihenfolge zählt: „Telefon Betrieb“ ist Telefon, „E-Mail Ausbilder“ ist E-Mail, „Ausbildungsberuf“ wird ignoriert */
+const IMH=[['',/^(nr\.?|lfd\.?( nr\.?)?|#|pos\.?|geschlecht|m\/w|konf|religion|staat|nation|bemerk)/],['mail',/mail/],['tel',/tel|fon|handy|mobil|notfall|phone/],['betrieb',/betrieb|firma|unternehmen|arbeitgeber|ausbildungsst|praktikum/],['',/geb|geburt|plz|postleitzahl|^(wohn)?ort\b|^stadt|stra(ss|ß)e|^str\.?$|anschrift|adresse|beruf|eltern|erziehungs|mutter|vater/],['klasse',/^klasse|^kl\.?$|^lerngruppe|^kurs/],['vn',/vorname|rufname/],['nn',/nachname|familienname|zuname/],['name',/^(name|schüler(in|innen)?|schülername|name des schülers|auszubildende[r]?|azubi)\b/]];
 const RX={date:/^\d{1,2}\.\s?\d{1,2}\.\s?(\d{2}|\d{4})$/,mail:/^\S+@\S+\.\S+$/,tel:/^(\+|0|\()[\d\s\/()\-.]{5,}$/,plz:/^\d{5}$/,plzort:/^\d{5}\s+\D/,str:/\D{3,}\s*\d+\s*[a-z]?(\s*[-\/]\s*\d+[a-z]?)?$/i,
- klasse:/^(\d{1,2}\s?[a-z]{0,2}|ef|q1|q2|e1|e2)$/i,name:/^[A-ZÄÖÜÉ][\p{L}'\-]+(\s+[\p{L}'\-]+)*$/u,junk:/seite\s*\d|^\s*(klassenliste|schülerliste|schuljahr|stand\b|gedruckt|druckdatum|summe|anzahl|gesamt|unterschrift)/i};
+ klasse:/^(\d{1,2}\s?[a-z]{0,2}|ef|q1|q2|e1|e2)$/i,name:/^[A-ZÄÖÜÉ][\p{L}'\-]+(\s+[\p{L}'\-]+)*$/u,firma:/\b(gmbh|ag|kg|ohg|ug|mbh|gbr|e\.\s?k\.?|e\.\s?v\.?|co\.?|& co)\b|betrieb|werk|handel|service|bau\b/i,junk:/seite\s*\d|^\s*(klassenliste|schülerliste|schuljahr|stand\b|gedruckt|druckdatum|summe|anzahl|gesamt|unterschrift)/i};
 let IM=null;
 function importModal(kid){
  IM={kid:kid||null};
@@ -797,16 +788,15 @@ function guessMap(rows,n){
   if(!v.length)f='';
   else if(v.every((x,j)=>/^\d+\.?$/.test(x))&&v.map(x=>parseInt(x)).every((x,j,a)=>!j||x===a[j-1]+1))f='';
   else if(fr(RX.mail)>0.5)f='mail';
-  else if(fr(RX.date)>0.5)f='geb';
-  else if(fr(RX.plzort)>0.5)f='plzort';
-  else if(fr(RX.plz)>0.5)f='plz';
+  else if(fr(RX.date)>0.5||fr(RX.plzort)>0.5||fr(RX.plz)>0.5)f='';
   else if(fr(RX.tel)>0.5)f='tel';
-  else if(fr(RX.str)>0.5)f='str';
+  else if(fr(RX.firma)>0.3)f='betrieb';
+  else if(fr(RX.str)>0.5)f='';
   else if(fr(RX.klasse)>0.6)f='klasse';
   else if(v.filter(x=>/^[mwd]$/i.test(x)).length/v.length>0.6)f='';
   else if(v.filter(x=>x.includes(',')&&RX.name.test(x.replace(',',''))).length/v.length>0.5)f='name';
-  else if(fr(RX.name)>0.5){f=!used.nn&&!used.name?'nn':!used.vn&&!used.name?'vn':used.ort||used.plzort?'eltern':'ort'}
-  if(f&&f!=='tel'&&f!=='eltern'&&used[f])f='';
+  else if(fr(RX.name)>0.5){f=!used.nn&&!used.name?'nn':!used.vn&&!used.name?'vn':'betrieb'}
+  if(f&&f!=='tel'&&used[f])f='';
   if(f)used[f]=1;map.push(f);
  }
  /* nur eine Namensspalte ohne Komma: als Name (Nach- und Vorname) lesen */
@@ -837,10 +827,8 @@ function imRecs(){
   const a=recs[x.after-1],b=recs[x.after];let t=a,above=false;
   if(b&&x.y!=null&&b._y!=null&&(!a||Math.abs(b._y-x.y)<Math.abs(x.y-a._y)))t=b,above=true;
   if(!t)return;
-  Object.keys(x.o).forEach(k=>{const v=x.o[k],sep=k==='eltern'||(k==='adr'&&/^\d{5}\b/.test(above?t[k]||'':v))?', ':' ';t[k]=t[k]?(above?v+sep+t[k]:t[k]+sep+v):v});
+  Object.keys(x.o).forEach(k=>{const v=x.o[k],sep=' ';t[k]=t[k]?(above?v+sep+t[k]:t[k]+sep+v):v});
  });
- /* Adresse erst nach dem Zusammenführen bauen */
- recs.forEach(o=>{o.adr=[o.adr,o.str,[o.plz,o.ort].filter(Boolean).join(' ')||'',o.plzort].filter(Boolean).join(', ')});
  IM.recs=recs.map(o=>{const r={on:true};IMC.forEach(([k])=>r[k]=o[k]||'');return r});
  imDupes();
 }
@@ -885,7 +873,7 @@ function imSave(){
  const made={},touched=new Set();
  recs.forEach(r=>{const t=imTarget(r.klasse);let kid=t.kid;
   if(!kid){kid=made[r.klasse];if(!kid){kid=made[r.klasse]=uid();S.klassen.push({id:kid,name:t.name.trim(),fach:t.fach});S.sitz[kid]=[]}}
-  const s={id:uid(),klasse:kid,vn:r.vn.trim(),nn:r.nn.trim(),tel:r.tel.trim(),adr:r.adr.trim(),eltern:r.eltern.trim(),geb:r.geb.trim(),mail:r.mail.trim(),ziel:'',stand:'',vereinb:[],noten:[],krank:[],unent:[],notizen:[],zeugnis:''};
+  const s={id:uid(),klasse:kid,vn:r.vn.trim(),nn:r.nn.trim(),tel:r.tel.trim(),betrieb:r.betrieb.trim(),mail:r.mail.trim(),ziel:'',stand:'',noten:[],krank:[],unent:[],notizen:[]};
   S.schueler.push(s);addDeskFor(kid,s.id);touched.add(kid)});
  save();closeModal();const ks=[...touched];IM=null;
  go(ks.length===1?{tab:'klassen',klasse:ks[0],ktab:'schueler',schueler:null}:{tab:'klassen',klasse:null,schueler:null});
@@ -896,28 +884,20 @@ function imSave(){
 function vSchueler(s){
  const t=iso(new Date()),st=stats(s),kr=s.krank.includes(t),k=kl(s.klasse);
  const chips=typ=>{const l=s.noten.filter(n=>n.typ===typ).sort((a,b)=>b.d.localeCompare(a.d));return l.length?l.map(n=>`<button class="chip" onclick="noteModal('${s.id}','${n.id}')">${fmt(n.w)}<small>${esc(n.kat)} · ${dshort(n.d)}</small></button>`).join(''):'<span class="sub">Noch keine Note.</span>'};
- const aufs=auftraegeFor(s);
  return `<div class="ph"><div class="head"><div class="avwrap" onclick="fotoModal('${s.id}')" title="Foto ändern">${avHtml(s,'lg')}<span class="avedit">${FOTO[s.id]?'ändern':'+ Foto'}</span></div><div><button class="crumb" onclick="${V.back==='alle'?"go({tab:'schueler',klasse:null,schueler:null})":"go({schueler:null})"}">‹ ${V.back==='alle'?'SchülerInnen':esc(k.name)+' '+esc(k.fach)}</button><h1>${esc(nameOf(s))}</h1><div class="sub">${kr?'<span class="tag bad">heute krank</span> ':''}${faellig(s).length?`<span class="tag warn">${faellig(s).length} ${faellig(s).length===1?'Notiz':'Notizen'} fällig</span> `:''}<button class="crumb" onclick="krankModal('${s.id}')">Fehltage insgesamt: ${s.krank.length}${s.unent.length?' (davon '+s.unent.length+' unentschuldigt)':''} · Verlauf ansehen</button></div></div></div>
  <div class="acts"><button onclick="schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button onclick="krank('${s.id}',${!kr})">${kr?'Krankmeldung aufheben':'Heute krank melden'}</button><button onclick="transferModal('${s.klasse}','${s.id}')">In andere Klasse oder anderes Fach kopieren</button><button class="dng" onclick="delSchueler('${s.id}')">Löschen</button></div></div>
  <div class="kpis"><div class="kpi"><b>${num(st.a)}</b><span>schriftlich Ø</span></div><div class="kpi"><b>${num(st.b)}</b><span>mündlich Ø</span></div><div class="kpi"><b>${zn(st.g)}</b><span>Zeugnisnote (${num(st.g)}, ${S.set.gew}/${100-S.set.gew})</span></div><div class="kpi click" onclick="krankModal('${s.id}')"><b>${s.krank.length-s.unent.length}</b><span>Fehltage entschuldigt</span></div><div class="kpi click" onclick="krankModal('${s.id}')"><b${s.unent.length?' style="color:var(--bad)"':''}>${s.unent.length}</b><span>Fehltage unentschuldigt</span></div></div>
- <div class="card" style="margin-bottom:18px"><div class="row" style="flex-wrap:wrap;gap:10px;border:none;padding:0"><h2 style="margin:0">Zeugnis</h2><span class="sub" id="zg_i">${zgInfo(s)}</span></div><textarea class="grow zg" style="margin-top:12px" placeholder="Zeugnistext fortlaufend schreiben" oninput="zgUpd('${s.id}',this.value)">${esc(s.zeugnis)}</textarea></div>
  <div class="card" style="margin-bottom:18px"><div class="row" style="flex-wrap:wrap;gap:10px"><h2 style="margin:0">Noten</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="seg" style="margin:0"><button class="${V.ntab!=='uebersicht'?'on':''}" onclick="nTab('liste')">Liste</button><button class="${V.ntab==='uebersicht'?'on':''}" onclick="nTab('uebersicht')">Übersicht</button></div><button class="pri" onclick="noteModal('${s.id}')">+ Note eintragen</button></div></div>
  ${V.ntab==='uebersicht'?`<h3>Schriftlich</h3><div class="chips">${chips('s')}</div><h3>Mündlich</h3><div class="chips">${chips('m')}</div>`:notenListe(s)}</div>
  <div class="g2e"><div class="stack">
  <div class="card"><h2>Stammdaten</h2><div class="two"><label>Vorname<input value="${esc(s.vn)}" oninput="upd('${s.id}','vn',this.value)"></label><label>Nachname<input value="${esc(s.nn)}" oninput="upd('${s.id}','nn',this.value)"></label></div>
- <div class="two"><label>Geburtsdatum<input value="${esc(s.geb)}" placeholder="TT.MM.JJJJ" oninput="upd('${s.id}','geb',this.value)"></label><label>Telefon<input value="${esc(s.tel)}" oninput="upd('${s.id}','tel',this.value)"></label></div><label>E-Mail<input type="email" value="${esc(s.mail)}" oninput="upd('${s.id}','mail',this.value)"></label><label>Adresse<textarea class="grow" rows="1" oninput="upd('${s.id}','adr',this.value)">${esc(s.adr)}</textarea></label><label>Eltern, Kontakt<textarea class="grow" rows="1" oninput="upd('${s.id}','eltern',this.value)">${esc(s.eltern)}</textarea></label></div>
+ <label>Betrieb<input value="${esc(s.betrieb)}" oninput="upd('${s.id}','betrieb',this.value)"></label><div class="two"><label>E-Mail<input type="email" value="${esc(s.mail)}" oninput="upd('${s.id}','mail',this.value)"></label><label>Telefon<input value="${esc(s.tel)}" oninput="upd('${s.id}','tel',this.value)"></label></div></div>
  </div><div class="stack">
  <div class="card"><h2>Notizen und ToDos</h2>${notizenHtml(s)}</div>
  <div class="card"><h2>Lernziele dieses Schuljahr</h2><textarea class="grow" placeholder="Ziele aus der Reflexion" oninput="upd('${s.id}','ziel',this.value)">${esc(s.ziel)}</textarea></div>
- <div class="card"><h2>Vereinbarungen</h2>${s.vereinb.map((v,i)=>`<div class="row"><span class="sub" style="white-space:nowrap">${dshort(v.d)}</span>${mitSel(`onchange="sc('${s.id}').vereinb[${i}].mit=this.value;save()"`,v.mit)}<textarea class="grow" rows="1" oninput="sc('${s.id}').vereinb[${i}].t=this.value;save()">${esc(v.t)}</textarea><button class="ghost dng" onclick="delVer('${s.id}',${i})" title="Löschen">×</button></div>`).join('')}
- <div style="display:flex;gap:8px;margin-top:10px">${mitSel('id="v_m"')}<textarea class="grow" rows="1" id="v_t" placeholder="z. B. Hörverstehen schulen"></textarea><button onclick="addVer('${s.id}')">Hinzufügen</button></div></div>
  <div class="card"><h2>Aktueller Stand</h2><textarea class="grow" placeholder="Woran arbeitet der Schüler gerade?" oninput="upd('${s.id}','stand',this.value)">${esc(s.stand)}</textarea></div>
- <div class="card"><h2>Aufträge</h2>${aufs.length?aufs.map(a=>`<label class="chk"><input type="checkbox" ${a.done[s.id]?'checked':''} onchange="togg('${a.id}','${s.id}',this.checked)"><span>${esc(a.titel)} <span class="sub">${a.faellig?'bis '+dshort(a.faellig):''}</span></span></label>`).join(''):'<div class="sub">Keine Aufträge.</div>'}
- <button class="btn" onclick="auftragModal(null,'${s.id}')">+ Auftrag nur für ${esc(s.vn)}</button></div>
  </div></div>`;
 }
-function zgInfo(s){const w=(s.zeugnis.match(/\S+/g)||[]).length;return w?w+' Wörter'+(s.zeugnisD?' · zuletzt bearbeitet am '+dlong(s.zeugnisD):''):'Noch kein Text'}
-function zgUpd(id,v){const s=sc(id);s.zeugnis=v;s.zeugnisD=iso(new Date());save();const e=$('#zg_i');if(e)e.textContent=zgInfo(s)}
 /* Notizen: ToDos mit Fälligkeit */
 const dueDays=f=>Math.round((new Date(f+'T00:00:00')-new Date(iso(new Date())+'T00:00:00'))/864e5);
 const faellig=s=>s.notizen.filter(n=>!n.done&&n.f&&dueDays(n.f)<=0);
@@ -960,10 +940,6 @@ function krankModal(id){
 function krankAdd(id){const d=$('#k_d').value,s=sc(id);if(!d)return;if(!s.krank.includes(d))s.krank.push(d);s.unent=s.unent.filter(x=>x!==d);if($('#k_u').value==='u')s.unent.push(d);save();render();krankModal(id)}
 function krankEnt(id,d,u){const s=sc(id);s.unent=s.unent.filter(x=>x!==d);if(u)s.unent.push(d);save();render();krankModal(id)}
 function krankDel(id,d){const s=sc(id);s.krank=s.krank.filter(x=>x!==d);s.unent=s.unent.filter(x=>x!==d);save();render();krankModal(id)}
-function togg(aid,sid,v){const a=S.auftraege.find(x=>x.id===aid);if(v)a.done[sid]=true;else delete a.done[sid];save();render()}
-const mitSel=(attr,sel)=>`<select style="width:auto" ${attr||''}><option value="s" ${sel!=='e'?'selected':''}>Schüler</option><option value="e" ${sel==='e'?'selected':''}>Eltern</option></select>`;
-function addVer(id){const v=$('#v_t').value.trim();if(!v)return;sc(id).vereinb.push({d:iso(new Date()),mit:$('#v_m').value,t:v});save();render()}
-function delVer(id,i){sc(id).vereinb.splice(i,1);save();render()}
 function delSchueler(id){ask('Schüler löschen?',()=>{fotoDel(id);S.schueler=S.schueler.filter(s=>s.id!==id);Object.keys(S.sitz).forEach(k=>{S.sitz[k].forEach(d=>{if(d.sid===id)d.sid=''})});save();go(V.back==='alle'?{tab:'schueler',klasse:null,schueler:null}:{schueler:null})})}
 function noteModal(sid,nid){
  const s=sc(sid),n=nid?s.noten.find(x=>x.id===nid):{typ:'m',kat:'',w:2,d:iso(new Date()),th:'',n:''};
@@ -1038,43 +1014,6 @@ function deskSave(kid,did){
 }
 function deskDel(kid,did){S.sitz[kid]=S.sitz[kid].filter(x=>x.id!==did);save();closeModal();render()}
 
-/* ---------- Aufträge ---------- */
-function vAuftraege(){
- if(V.auftrag){
-  const a=S.auftraege.find(x=>x.id===V.auftrag);
-  if(!a){V.auftrag=null}else{
-   const ss=S.schueler.filter(s=>applies(a,s));
-   let h=`<div class="ph"><div><button class="crumb" onclick="go({auftrag:null})">‹ Alle Aufträge</button><h1>${esc(a.titel)}</h1><div class="sub">${a.faellig?'Fällig bis '+dshort(a.faellig)+' · ':''}${ss.filter(s=>a.done[s.id]).length} von ${ss.length} erledigt</div></div><div class="acts"><button onclick="auftragModal(null,null,'${a.id}')">Bearbeiten</button><button class="dng" onclick="delAuftrag('${a.id}')">Löschen</button></div></div><div class="cards">`;
-   const groups={};ss.forEach(s=>{(groups[s.klasse]=groups[s.klasse]||[]).push(s)});
-   Object.keys(groups).forEach(kid=>{h+=`<div class="card"><h2>${esc(kl(kid).name)} <span class="sub">${esc(kl(kid).fach)}</span></h2>`+groups[kid].sort((x,y)=>x.nn.localeCompare(y.nn,'de')).map(s=>`<label class="chk"><input type="checkbox" ${a.done[s.id]?'checked':''} onchange="togg('${a.id}','${s.id}',this.checked)">${esc(s.nn)}, ${esc(s.vn)}</label>`).join('')+`</div>`});
-   return h+`</div>`;
-  }
- }
- let h=`<div class="ph"><div><h1>Aufträge</h1><div class="sub">${S.auftraege.length} Aufträge</div></div><div class="acts"><button class="pri" onclick="auftragModal()">+ Neuer Auftrag</button></div></div><div class="cards">`;
- S.auftraege.forEach(a=>{
-  const ss=S.schueler.filter(s=>applies(a,s)),dn=ss.filter(s=>a.done[s.id]).length,p=ss.length?Math.round(dn/ss.length*100):0;
-  const names=a.klassen.map(k=>kl(k)?kl(k).name:'').filter(Boolean).concat((a.schueler||[]).map(i=>sc(i)?sc(i).vn:'').filter(Boolean)).join(', ');
-  h+=`<div class="card click" onclick="go({auftrag:'${a.id}'})"><div class="row first"><div><b>${esc(a.titel)}</b><div class="sub">${esc(names)}${a.faellig?' · bis '+dshort(a.faellig):''}</div></div><span class="tag ${p===100?'ok':'warn'}">${dn} / ${ss.length}</span></div><div class="bar"><i style="width:${p}%"></i></div><div class="acts" style="margin-top:12px"><button onclick="event.stopPropagation();auftragModal(null,null,'${a.id}')">Bearbeiten</button><button class="dng" onclick="event.stopPropagation();delAuftrag('${a.id}')">Löschen</button></div></div>`;
- });
- if(!S.auftraege.length)h+=`<div class="sub">Noch keine Aufträge.</div>`;
- return h+`</div>`;
-}
-function auftragModal(preK,preS,eid){
- const a=eid?S.auftraege.find(x=>x.id===eid):null,indiv=a?a.klassen.length===0:!!preS,sid=a?(a.schueler||[])[0]:preS;
- modal(`<h2>${a?'Auftrag bearbeiten':'Neuer Auftrag'}</h2><label>Titel<textarea class="grow" rows="1" id="a_t" placeholder="z. B. Workbook S. 42">${a?esc(a.titel):''}</textarea></label><label>Fällig am<input type="date" id="a_d" value="${a?a.faellig||'':''}"></label>
- ${indiv?`<div class="sub">Gilt nur für ${sid&&sc(sid)?esc(nameOf(sc(sid))):'einen Schüler'}.</div>`:`<h3>Für welche Klassen?</h3>`+S.klassen.map(k=>`<label class="chk"><input type="checkbox" class="a_k" value="${k.id}" ${a?(a.klassen.includes(k.id)?'checked':''):(k.id===preK?'checked':'')}>${esc(k.name)} <span class="sub">${esc(k.fach)}</span></label>`).join('')}
- <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="auftragSave('${indiv&&sid?sid:''}','${eid||''}')">Speichern</button></div>`);
-}
-function auftragSave(preS,eid){
- const t=$('#a_t').value.trim();if(!t)return info('Bitte einen Titel eingeben.');
- const ks=Array.from(document.querySelectorAll('.a_k')).filter(x=>x.checked).map(x=>x.value);
- if(!preS&&!ks.length)return info('Bitte mindestens eine Klasse wählen.');
- if(eid){const a=S.auftraege.find(x=>x.id===eid);if(!a){closeModal();return}a.titel=t;a.faellig=$('#a_d').value;if(!preS)a.klassen=ks}
- else S.auftraege.push({id:uid(),titel:t,faellig:$('#a_d').value,klassen:ks,schueler:preS?[preS]:[],done:{}});
- save();closeModal();render();
-}
-function delAuftrag(id){ask('Auftrag löschen?',()=>{S.auftraege=S.auftraege.filter(a=>a.id!==id);save();go({auftrag:null})})}
-
 /* ---------- Woche ---------- */
 function vWoche(){
  const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+7*V.week);
@@ -1103,11 +1042,12 @@ function vMehr(){
  });
  h+=`</table></div></div><div class="stack">
  <div class="card"><h2>Darstellung</h2><div class="seg" style="margin:0"><button class="${th==='light'?'on':''}" onclick="setTheme('light')">Hell</button><button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">Dunkel</button><button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">System</button></div></div>
- <div class="card"><h2>Noten</h2><label>Gewicht schriftlich in Prozent (mündlich: Rest)<input type="number" min="0" max="100" value="${S.set.gew}" oninput="S.set.gew=Math.min(100,Math.max(0,+this.value||0));save()"></label>
+ <div class="card"><h2>Noten</h2><div class="sub">Voreinstellung 50/50.</div><label>Gewicht schriftlich in Prozent (mündlich: Rest)<input type="number" min="0" max="100" value="${S.set.gew}" oninput="S.set.gew=Math.min(100,Math.max(0,+this.value||0));save()"></label>
  <label>Schriftliche Arten (mit Komma trennen)<textarea class="grow" rows="1" onchange="setList('katS',this.value)">${esc(S.set.katS.join(', '))}</textarea></label>
- <label>Mündliche Arten (mit Komma trennen)<textarea class="grow" rows="1" onchange="setList('katM',this.value)">${esc(S.set.katM.join(', '))}</textarea></label>
- <label>Fächer (mit Komma trennen)<textarea class="grow" rows="1" onchange="setList('faecher',this.value)">${esc(S.set.faecher.join(', '))}</textarea></label></div>
- <div class="card"><h2>Als App (iPad)</h2><div id="pwst">${pwaStatus()}</div></div>
+ <label>Mündliche Arten (mit Komma trennen)<textarea class="grow" rows="1" onchange="setList('katM',this.value)">${esc(S.set.katM.join(', '))}</textarea></label></div>
+ <div class="card"><h2>Fächer</h2>${S.set.faecher.map((f,i)=>`<div class="row"><input value="${esc(f)}" onchange="fachRen(${i},this.value)"><button class="ghost dng" onclick="fachDel(${i})" title="Löschen">×</button></div>`).join('')}
+ <div style="display:flex;gap:8px;margin-top:10px"><input id="f_n" placeholder="Neues Fach"><button onclick="fachAdd()">Hinzufügen</button></div>
+ <div class="sub" style="margin-top:8px">Umbenennen ändert das Fach auch bei allen Klassen.</div></div>
  <div class="card"><h2>Automatische Sicherung</h2><div id="abst">${abStatus()}</div></div>
  <div class="card"><h2>Sicherung per Hand</h2><div class="sub">Letzte Sicherung: ${S.set.letzterExport?dshort(S.set.letzterExport):'noch nie'}. Alle Daten liegen nur in diesem Browser.</div>
  ${SHARE?'<button class="btn pri" onclick="shareJ()">Sichern über Teilen-Menü (Drive, Dateien)</button><button class="btn" onclick="exportJ()">Als Datei laden</button>':'<button class="btn pri" onclick="exportJ()">Sicherung exportieren</button>'}
@@ -1117,8 +1057,11 @@ function vMehr(){
  return h;
 }
 function setPlan(t,i,v){if(v)S.plan[t+'-'+i]=v;else delete S.plan[t+'-'+i];save()}
+function fachAdd(){const v=$('#f_n').value.trim();if(!v||S.set.faecher.includes(v))return;S.set.faecher.push(v);save();render()}
+function fachRen(i,v){v=v.trim();const o=S.set.faecher[i];if(!v||v===o){render();return}S.set.faecher[i]=v;S.klassen.forEach(k=>{if(k.fach===o)k.fach=v});save();render()}
+function fachDel(i){const f=S.set.faecher[i],n=S.klassen.filter(k=>k.fach===f).length;ask(n?`„${f}“ löschen? ${n} Klasse(n) behalten das Fach.`:`„${f}“ löschen?`,()=>{S.set.faecher.splice(i,1);save();render()})}
 function setList(k,v){S.set[k]=v.split(',').map(x=>x.trim()).filter(Boolean);save()}
-function emptyState(){const d=seed();return{klassen:[],schueler:[],auftraege:[],plan:{},planung:{},sitz:{},zeiten:d.zeiten,set:Object.assign({},d.set,{letzterExport:null})}}
+function emptyState(){const d=seed();return{klassen:[],schueler:[],plan:{},planung:{},sitz:{},zeiten:d.zeiten,set:Object.assign({},d.set,{letzterExport:null})}}
 function exportJ(){
  S.set.letzterExport=iso(new Date());save();
  const b=new Blob([JSON.stringify(Object.assign({},S,{fotos:FOTO}),null,1)],{type:'application/json'}),a=document.createElement('a');
