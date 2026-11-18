@@ -1,5 +1,5 @@
 // Offline-Cache. Bei Änderungen an index.html die Versionsnummer erhöhen.
-const V = 'lehrertobi-v22';
+const V = 'lehrertobi-v23';
 // Lesehilfen für den Import (PDF, Excel, Texterkennung) aus dem Netz, nach dem ersten Laden offline
 const LIBS = 'lehrertobi-libs';
 const LIBHOSTS = ['cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'tessdata.projectnaptha.com'];
