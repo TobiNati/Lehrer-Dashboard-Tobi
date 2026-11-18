@@ -547,7 +547,7 @@ function gSearch(){
  S.schueler.filter(s=>matchS(s,q)).forEach(s=>{const k=kl(s.klasse);add('SchülerInnen',nameOf(s),k?k.name+' · '+k.fach:'',()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))});
  [y0,y0+1,y0+2,y0-1].forEach(y=>{const m=feiertage(y);Object.keys(m).forEach(d=>{if(gHit(m[d]+' '+dlong(d),tk))add('Feiertage und Ferien',m[d],dlong(d),()=>go({tab:'kalender',year:y}),'fe')})});
  const t0=iso(new Date());FERIEN.slice().sort((a,b)=>((a[1]<t0)-(b[1]<t0))||a[0].localeCompare(b[0])).forEach(f=>{if(gHit(f[2]+' '+dlong(f[0])+' '+dlong(f[1]),tk))add('Feiertage und Ferien',f[2],f[0]===f[1]?dlong(f[0]):dshort(f[0])+' – '+dlong(f[1]),()=>go({tab:'kalender',year:+f[0].slice(0,4)}),'fr')});
- S.schueler.forEach(s=>{[['Lernziel',s.ziel],['Stand',s.stand],['Betrieb',s.betrieb]].concat(s.notizen.map(n=>['Notiz',n.t])).forEach(x=>{if(x[1]&&gHit(x[1],tk))add('Notizen',nameOf(s)+' · '+x[0],x[1].slice(0,70),()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))})});
+ S.schueler.forEach(s=>{[['Betrieb',s.betrieb]].concat(s.notizen.map(n=>['Notiz',n.t])).forEach(x=>{if(x[1]&&gHit(x[1],tk))add('Notizen',nameOf(s)+' · '+x[0],x[1].slice(0,70),()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))})});
  Object.keys(S.planung).forEach(key=>{const t=S.planung[key];if(!t||!gHit(t,tk))return;const p=key.split('|');add('Notizen','Planung '+dshort(p[0])+(isNaN(+p[1])?'':' · '+(+p[1]+1)+'. Std'),t.slice(0,70),()=>go({tab:'woche',week:weekOff(p[0])}))});
  const cnt={},out=items.filter(i=>(cnt[i.g]=(cnt[i.g]||0)+1)<=(i.g==='SchülerInnen'?8:6));
  G.items=out;G.sel=0;
@@ -608,7 +608,7 @@ function kopieModal(kid){
  modal(`<h2>Klasse kopieren</h2><label>Neuer Name<input id="c_n" value="${esc(k.name)}"></label>
  <label>Fach<select id="c_f">${fl.map(f=>`<option ${f===k.fach?'selected':''}>${esc(f)}</option>`).join('')}</select></label>
  <label class="chk"><input type="checkbox" id="c_no"> Noten mitkopieren</label>
- <div class="sub">Stammdaten, Lernziele, Notizen und Sitzplan werden übernommen, Krankmeldungen nicht.</div>
+ <div class="sub">Stammdaten, Notizen und Sitzplan werden übernommen, Krankmeldungen nicht.</div>
  <div class="btns"><button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="kopieSave('${kid}')">Kopieren</button></div>`);
 }
 function kopieSave(kid){
@@ -944,8 +944,6 @@ function vSchueler(s){
  <label>Betrieb<input value="${esc(s.betrieb)}" oninput="upd('${s.id}','betrieb',this.value)"></label><div class="two"><label>E-Mail<input type="email" value="${esc(s.mail)}" oninput="upd('${s.id}','mail',this.value)"></label><label>Telefon<input value="${esc(s.tel)}" oninput="upd('${s.id}','tel',this.value)"></label></div></div>
  </div><div class="stack">
  <div class="card"><h2>Notizen und ToDos</h2>${notizenHtml(s)}</div>
- <div class="card"><h2>Lernziele dieses Schuljahr</h2><textarea class="grow" placeholder="Ziele aus der Reflexion" oninput="upd('${s.id}','ziel',this.value)">${esc(s.ziel)}</textarea></div>
- <div class="card"><h2>Aktueller Stand</h2><textarea class="grow" placeholder="Woran arbeitet der Schüler gerade?" oninput="upd('${s.id}','stand',this.value)">${esc(s.stand)}</textarea></div>
  </div></div>`;
 }
 /* Notizen: ToDos mit Fälligkeit */
