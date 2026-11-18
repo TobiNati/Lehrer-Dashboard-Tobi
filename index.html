@@ -178,6 +178,24 @@ textarea.zg{min-height:140px}
 .imt th select{width:auto;min-width:130px;margin:0}
 .btns .btn{width:auto;margin:0}
 .btns.two{display:grid}
+.tt{display:grid;grid-template-columns:44px repeat(5,minmax(120px,1fr));gap:0 8px;min-width:700px}
+.ttw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tt-hd{padding:0 2px 8px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:34px}
+.tt-hd.today{color:var(--ac2)}
+.tt-ax,.tt-c{position:relative}
+.tt-ax span{position:absolute;right:6px;transform:translateY(-50%);font-size:11px;color:var(--tx2)}
+.tt-c{border-radius:12px;background:var(--card);border:1px solid var(--bd)}
+.tt-c.fe{background:var(--febg)}.tt-c.fr{background:var(--frbg)}
+.tt-c i{position:absolute;left:0;right:0;border-top:1px dashed var(--bd)}
+.tt-c .free{position:absolute;top:10px;left:8px;right:8px;font-size:12px}
+.tt-b{position:absolute;padding:4px 7px;border-radius:9px;background:var(--acbg);border-left:3px solid var(--ac);overflow:hidden;cursor:pointer;font-size:12px;line-height:1.3;box-sizing:border-box}
+.tt-b b{display:block;font-size:13px;color:var(--tx)}
+.tt-b span{display:block;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-b.sm b,.tt-b.sm span{display:inline;margin-right:6px}
+.tt-b.now{box-shadow:inset 0 0 0 1.5px var(--ac)}
+.tt-b.ras{border-left-style:dashed}
+.tmtg{display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:6px}
+.tmtg label.chk{border:none;padding:4px 0}
 .week{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 table.pl{border-collapse:collapse;width:100%;font-size:13px}
 table.pl td,table.pl th{padding:4px;border:1px solid var(--bd)}
@@ -293,7 +311,7 @@ function vKalender(){
  return h;
 }
 
-const ICO={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.5 3.5 6"/>',task:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',cal2:'<rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8.5 13h2M13.5 13h2M8.5 16.5h2M13.5 16.5h2"/>',user:'<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/>'};
+const ICO={clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.5 3.5 6"/>',task:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>',moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',cal2:'<rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8.5 13h2M13.5 13h2M8.5 16.5h2M13.5 16.5h2"/>',user:'<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/>'};
 const ic=n=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICO[n]}</svg>`;
 
 
@@ -363,7 +381,7 @@ function seed(){
  const sitz={};K.forEach(k=>{sitz[k.id]=autoLayout(sch.filter(s=>s.klasse===k.id).map(s=>s.id))});
  return{klassen:K,schueler:sch,
   plan:{'0-0':'k1','0-1':'k3','0-3':'k2','0-5':'k1','1-0':'k2','1-2':'k1','1-4':'k3','2-1':'k1','2-3':'k2','2-5':'k3','3-0':'k3','3-2':'k2','3-3':'k1','4-1':'k2','4-2':'k3','4-4':'k1'},
-  planung:{},sitz:sitz,
+  planung:{},sitz:sitz,termine:[],
   zeiten:[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']],
   set:{gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null}};
 }
@@ -422,7 +440,7 @@ function feBind(){
 function feSave(){if(!FE)return info('Bitte zuerst ein Foto auswählen.');fotoPut(FES,FE);closeModal();render()}
 function feRemove(){fotoDel(FES);closeModal();render()}
 function normalize(d){
- d.klassen=d.klassen||[];d.schueler=d.schueler||[];delete d.auftraege;d.plan=d.plan||{};d.planung=d.planung||{};d.sitz=d.sitz||{};
+ d.klassen=d.klassen||[];d.schueler=d.schueler||[];delete d.auftraege;d.plan=d.plan||{};d.planung=d.planung||{};d.termine=d.termine||[];d.sitz=d.sitz||{};
  if(!d.zeiten||!d.zeiten.length)d.zeiten=[['07:55','08:40'],['08:45','09:30'],['09:50','10:35'],['10:40','11:25'],['11:45','12:30'],['12:35','13:20'],['13:30','14:15'],['14:20','15:05']];
  d.set=Object.assign({gew:50,katS:['Klassenarbeit','Test'],katM:['Mitarbeit','Vortrag','Referat','Hausaufgabe'],faecher:['Englisch','Geschichte','Deutsch','Mathematik'],letzterExport:null},d.set||{});
  d.schueler.forEach(s=>{s.noten=s.noten||[];s.krank=s.krank||[];s.unent=s.unent||[];s.notizen=s.notizen||[];['vn','nn','tel','betrieb','mail','ziel','stand'].forEach(k=>{if(s[k]==null)s[k]=''})});
@@ -430,7 +448,7 @@ function normalize(d){
  return d;
 }
 let S=normalize(load()||seed());
-let V={tab:'heute',q:'',qk:'',back:null,klasse:null,ktab:'schueler',schueler:null,week:0,year:new Date().getFullYear(),ntab:'liste'};
+let V={tab:'heute',q:'',qk:'',back:null,klasse:null,ktab:'schueler',schueler:null,week:0,spv:'woche',year:new Date().getFullYear(),ntab:'liste'};
 const kl=id=>S.klassen.find(k=>k.id===id);
 const sc=id=>S.schueler.find(s=>s.id===id);
 const nameOf=s=>s.vn+' '+s.nn;
@@ -447,13 +465,12 @@ function go(p){
  const a=$('#app');if(a&&a.classList){a.classList.remove('enter');void a.offsetWidth;a.classList.add('enter');clearTimeout(go._t);go._t=setTimeout(()=>a.classList.remove('enter'),320)}
 }
 function render(){
- const t={heute:vHeute,klassen:vKlassen,schueler:vSchuelerAlle,woche:vWoche,kalender:vKalender,mehr:vMehr}[V.tab];
+ const t={heute:vHeute,klassen:vKlassen,schueler:vSchuelerAlle,woche:vStundenplan,kalender:vKalender,mehr:vMehr}[V.tab];
  $('#app').innerHTML=remindHtml()+(AB.h&&!AB.perm?`<div class="ban">Die automatische Sicherung ist pausiert. <button class="mini" onclick="abResume()">Fortsetzen</button></div>`:'')+(_fail?`<div class="ban fe">Speichern im Browser ist nicht möglich (Speicher voll oder gesperrt). Bitte jetzt eine Sicherung exportieren.</div>`:'')+t();
- const items=[['heute','home','Heute'],['klassen','users','Klassen'],['schueler','user','SchülerInnen'],['woche','cal','Woche'],['kalender','cal2','Kalender']];
+ const items=[['heute','home','Heute'],['klassen','users','Klassen'],['schueler','user','SchülerInnen'],['woche','clock','Stundenplan'],['kalender','cal2','Kalender']];
  const le=S.set.letzterExport;
  $('#side').innerHTML=`<div class="brand"><div class="logo">${ic('cap')}</div><span>Lehrer-Dashboard</span></div>`
  +items.map(a=>`<button class="nv ${V.tab===a[0]?'on':''}" onclick="go({tab:'${a[0]}',klasse:null,schueler:null,ktab:'schueler'})">${ic(a[1])}<span>${a[2]}</span></button>`).join('')
- +`<div class="sec">Meine Klassen</div>`+S.klassen.map(k=>`<button class="nv k ${V.tab==='klassen'&&V.klasse===k.id?'on':''}" onclick="go({tab:'klassen',klasse:'${k.id}',schueler:null,ktab:'schueler'})"><span>${esc(k.name)}</span><small>${esc(k.fach)}</small></button>`).join('')
  +`<div class="sidebot"><button class="nv ${V.tab==='mehr'?'on':''}" onclick="go({tab:'mehr',klasse:null,schueler:null,ktab:'schueler'})">${ic('cog')}<span>Einstellungen</span></button><div class="sidefoot">Sicherung: ${le?dshort(le):'noch nie'}<button onclick="exportJ()">Jetzt exportieren</button></div></div>`;
  if(V.tab==='klassen'&&V.klasse&&!V.schueler&&V.ktab==='sitz')bindSitz();
  growAll();
@@ -477,7 +494,7 @@ function vHeute(){
  const d=new Date(),t=iso(d),tag=(d.getDay()+6)%7,nowM=d.getHours()*60+d.getMinutes();
  const mins=z=>{const p=z.split(':');return +p[0]*60+ +p[1]};
  const le=S.set.letzterExport,lessons=[],info=dayInfo(t);
- if(tag<5&&!info.feiertag&&!info.ferien)S.zeiten.forEach((z,i)=>{const kid=S.plan[tag+'-'+i];if(kid&&kl(kid))lessons.push({i:i,z:z,k:kl(kid)})});
+ lessons.push(...lessonsOn(t));
  const kr=S.schueler.filter(s=>s.krank.includes(t));
  let h=`<div class="ph"><div><h1>Guten Tag</h1><div class="sub">${d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div></div>`;
  if(info.feiertag)h+=`<div class="ban fe">Heute ist Feiertag: ${esc(info.feiertag)}. Kein Unterricht.</div>`;
@@ -485,10 +502,10 @@ function vHeute(){
  if(!le||(new Date()-new Date(le))/864e5>14)h+=`<div class="ban">Sicherung fällig: Exportiere deine Daten über die Seitenleiste oder unter „Einstellungen“.</div>`;
  h+=`<div class="kpis"><div class="kpi"><b>${lessons.length}</b><span>Stunden heute</span></div><div class="kpi"><b>${kr.length}</b><span>Schüler krank</span></div><div class="kpi"><b>${S.schueler.length}</b><span>Schüler gesamt</span></div></div>`;
  h+=`<div class="g2"><div class="card"><h2>Unterricht heute</h2>`;
- h+=lessons.length?lessons.map(l=>{const cur=nowM>=mins(l.z[0])&&nowM<=mins(l.z[1]),key=t+'|'+l.i;
-  return `<div class="les ${cur?'cur':''}"><div><b>${l.i+1}. Std</b><div class="t">${l.z[0]}–${l.z[1]}</div></div><div><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(l.k.name)} · ${esc(l.k.fach)}</b>${cur?'<span class="tag ac">jetzt</span>':''}</div>
+ h+=lessons.length?lessons.map(l=>{const cur=nowM>=mins(l.von)&&nowM<=mins(l.bis),key=l.key;
+  return `<div class="les ${cur?'cur':''}"><div><b>${l.von}</b><div class="t">bis ${l.bis}${l.nr?'<br>'+l.nr+'. Std':''}</div></div><div><div style="display:flex;justify-content:space-between;gap:8px"><b>${lesLabel(l)}</b>${cur?'<span class="tag ac">jetzt</span>':''}</div>
   <textarea class="grow" rows="1" placeholder="Was ist geplant?" oninput="S.planung['${key}']=this.value;save()">${esc(S.planung[key]||'')}</textarea>
-  <div style="margin-top:6px"><button class="pri" onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'sitz',schueler:null})">Sitzplan und mündliche Noten</button> <button onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'schueler',schueler:null})">Schülerliste</button></div></div></div>`}).join(''):'<div class="sub">'+(info.feiertag||info.ferien?'Heute kein Unterricht: '+esc(info.feiertag||info.ferien)+'.':'Heute kein Unterricht im Stundenplan.')+'</div>';
+  ${l.k?`<div style="margin-top:6px"><button class="pri" onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'sitz',schueler:null})">Sitzplan und mündliche Noten</button> <button onclick="go({tab:'klassen',klasse:'${l.k.id}',ktab:'schueler',schueler:null})">Schülerliste</button></div>`:''}</div></div>`}).join(''):'<div class="sub">'+(info.feiertag||info.ferien?'Heute kein Unterricht: '+esc(info.feiertag||info.ferien)+'.':'Heute kein Unterricht im Stundenplan.')+'</div>';
  const nz=[];S.schueler.forEach(s=>s.notizen.forEach(n=>{if(!n.done&&n.f&&dueDays(n.f)<=7)nz.push({s:s,n:n})}));nz.sort((a,b)=>a.n.f.localeCompare(b.n.f));
  h+=`</div><div class="stack">`+(nz.length?`<div class="card"><h2>Fällige Notizen</h2>`+nz.map(o=>`<div class="row click" onclick="go({tab:'klassen',klasse:'${o.s.klasse}',schueler:'${o.s.id}'})"><span><b>${esc(nameOf(o.s))}</b> <span class="sub">${esc(o.n.t.slice(0,60))}</span></span>${dueTag(o.n)}</div>`).join('')+`</div>`:'')+`<div class="card"><h2>Krank heute</h2>`+(kr.length?kr.map(s=>`<div class="row click" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}'})"><span>${esc(nameOf(s))}</span><span class="tag">${esc(kl(s.klasse).name)}</span></div>`).join(''):'<div class="sub">Niemand krank gemeldet.</div>')+`</div>
  <div class="card"><h2>Nächste Ferien und Feiertage</h2>${naechsteHtml()}</div></div></div>`;
@@ -531,7 +548,7 @@ function gSearch(){
  [y0,y0+1,y0+2,y0-1].forEach(y=>{const m=feiertage(y);Object.keys(m).forEach(d=>{if(gHit(m[d]+' '+dlong(d),tk))add('Feiertage und Ferien',m[d],dlong(d),()=>go({tab:'kalender',year:y}),'fe')})});
  const t0=iso(new Date());FERIEN.slice().sort((a,b)=>((a[1]<t0)-(b[1]<t0))||a[0].localeCompare(b[0])).forEach(f=>{if(gHit(f[2]+' '+dlong(f[0])+' '+dlong(f[1]),tk))add('Feiertage und Ferien',f[2],f[0]===f[1]?dlong(f[0]):dshort(f[0])+' – '+dlong(f[1]),()=>go({tab:'kalender',year:+f[0].slice(0,4)}),'fr')});
  S.schueler.forEach(s=>{[['Lernziel',s.ziel],['Stand',s.stand],['Betrieb',s.betrieb]].concat(s.notizen.map(n=>['Notiz',n.t])).forEach(x=>{if(x[1]&&gHit(x[1],tk))add('Notizen',nameOf(s)+' · '+x[0],x[1].slice(0,70),()=>go({tab:'klassen',klasse:s.klasse,schueler:s.id}))})});
- Object.keys(S.planung).forEach(key=>{const t=S.planung[key];if(!t||!gHit(t,tk))return;const p=key.split('|');add('Notizen','Planung '+dshort(p[0])+' · '+(+p[1]+1)+'. Std',t.slice(0,70),()=>go({tab:'woche',week:weekOff(p[0])}))});
+ Object.keys(S.planung).forEach(key=>{const t=S.planung[key];if(!t||!gHit(t,tk))return;const p=key.split('|');add('Notizen','Planung '+dshort(p[0])+(isNaN(+p[1])?'':' · '+(+p[1]+1)+'. Std'),t.slice(0,70),()=>go({tab:'woche',week:weekOff(p[0])}))});
  const cnt={},out=items.filter(i=>(cnt[i.g]=(cnt[i.g]||0)+1)<=(i.g==='SchülerInnen'?8:6));
  G.items=out;G.sel=0;
  let h='',last='';
@@ -635,7 +652,7 @@ function klasseSave(id){
 }
 function delKlasse(id){ask('Klasse mit allen Schülern löschen?',()=>{
  S.schueler.filter(s=>s.klasse===id).forEach(s=>fotoDel(s.id));S.schueler=S.schueler.filter(s=>s.klasse!==id);S.klassen=S.klassen.filter(k=>k.id!==id);delete S.sitz[id];
- Object.keys(S.plan).forEach(k=>{if(S.plan[k]===id)delete S.plan[k]});
+ Object.keys(S.plan).forEach(k=>{if(S.plan[k]===id)delete S.plan[k]});S.termine=S.termine.filter(t=>t.kid!==id);
  save();go({klasse:null})})}
 function schuelerModal(kid,id){
  const s=id?sc(id):{vn:'',nn:'',tel:'',betrieb:'',mail:'',klasse:kid};
@@ -1068,27 +1085,128 @@ function deskSave(kid,did){
 }
 function deskDel(kid,did){S.sitz[kid]=S.sitz[kid].filter(x=>x.id!==did);save();closeModal();render()}
 
-/* ---------- Woche ---------- */
-function vWoche(){
- const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+7*V.week);
- const e=new Date(d);e.setDate(d.getDate()+4);
- let h=`<div class="ph"><div><h1>Wochenplanung</h1><div class="sub">${dshort(iso(d))}–${dshort(iso(e))}</div></div><div class="acts"><button onclick="go({week:${V.week-1}})">‹ Vorherige</button><button onclick="go({week:0})">Diese Woche</button><button onclick="go({week:${V.week+1}})">Nächste ›</button></div></div><div class="week">`;
- for(let i=0;i<5;i++){
-  const day=new Date(d);day.setDate(d.getDate()+i);const ds=iso(day);
-  const inf=dayInfo(ds),free=inf.feiertag||inf.ferien;h+=`<div class="card ${inf.feiertag?'fe':inf.ferien?'fr':''}"><h2>${DAYS[i]} <span class="sub">${dshort(ds)}</span> ${free?`<span class="tag ${inf.feiertag?'fe':'fr'}">${esc(free)}</span>`:''}</h2>`;
-  let any=false;
-  S.zeiten.forEach((z,j)=>{const kid=S.plan[i+'-'+j];if(free||!kid||!kl(kid))return;any=true;const key=ds+'|'+j;
-   h+=`<div style="margin:0 0 10px"><div class="sub" style="margin-bottom:3px">${j+1}. Std · ${esc(kl(kid).name)} ${esc(kl(kid).fach)} · ${z[0]}</div><textarea class="grow" rows="1" placeholder="Was ist geplant?" oninput="S.planung['${key}']=this.value;save()">${esc(S.planung[key]||'')}</textarea></div>`});
-  if(!any)h+=`<div class="sub">${free?'Kein Unterricht.':'Keine Stunden.'}</div>`;
-  h+=`</div>`;
- }
- return h+`</div>`;
+/* ---------- Stundenplan: Wochenraster und Einträge mit Wiederholung ---------- */
+const WDH=[['einmal','Einmalig'],['taeglich','Täglich (Mo–Fr)'],['woechentlich','Wöchentlich'],['zweiwoechentlich','Alle 2 Wochen'],['monatlich','Monatlich']];
+const WT7=['Mo','Di','Mi','Do','Fr','Sa','So'];
+const wdOf=ds=>(new Date(ds+'T00:00:00').getDay()+6)%7;
+const minOf=z=>{const p=String(z||'0:0').split(':');return +p[0]*60+ +p[1]};
+function occurs(t,ds,free){
+ if(ds<t.start||(t.aus||[]).includes(ds))return false;
+ if(t.wdh==='einmal')return ds===t.start;
+ if(t.ende&&ds>t.ende)return false;
+ if(free&&t.ferien!==false)return false;
+ const wd=wdOf(ds);
+ if(t.wdh==='taeglich')return wd<5;
+ if(t.wdh==='monatlich')return ds.slice(8)===t.start.slice(8);
+ if(!(t.tage||[]).includes(wd))return false;
+ if(t.wdh==='zweiwoechentlich'){const m0=addD(new Date(t.start+'T00:00:00'),-wdOf(t.start)),dd=Math.round((new Date(ds+'T00:00:00')-m0)/864e5);return Math.floor(dd/7)%2===0}
+ return true;
 }
+/* Alle Stunden eines Tages: Wochenraster aus den Einstellungen plus Einträge */
+function lessonsOn(ds){
+ const inf=dayInfo(ds),free=!!(inf.feiertag||inf.ferien),wd=wdOf(ds),out=[];
+ if(wd<5&&!free)S.zeiten.forEach((z,i)=>{const kid=S.plan[wd+'-'+i];if(kid&&kl(kid))out.push({key:ds+'|'+i,nr:i+1,von:z[0],bis:z[1],k:kl(kid)})});
+ S.termine.forEach(t=>{if(occurs(t,ds,free))out.push({key:ds+'|'+t.id,von:t.von,bis:t.bis,k:t.kid?kl(t.kid):null,titel:t.titel,raum:t.raum,t:t})});
+ return out.sort((a,b)=>a.von.localeCompare(b.von));
+}
+const lesLabel=l=>(l.k?esc(l.k.name)+' · '+esc(l.k.fach)+(l.titel?' · '+esc(l.titel):''):esc(l.titel||'Termin'))+(l.raum?' · '+esc(l.raum):'');
+function sjEnde(ds){const f=FERIEN.find(x=>x[2]==='Sommerferien'&&x[0]>ds);return f?iso(addD(new Date(f[0]+'T00:00:00'),-1)):''}
+function hjEnde(ds){const y=+ds.slice(0,4),j=(+ds.slice(5,7)>=8?y+1:y)+'-01-31';return ds<=j?j:sjEnde(ds)}
+function wdhText(t){
+ const tg=(t.tage||[]).slice().sort().map(i=>WT7[i]).join(', ');
+ const w={einmal:'Einmalig am '+dlong(t.start),taeglich:'Täglich Mo–Fr',woechentlich:'Jede Woche '+tg,zweiwoechentlich:'Alle 2 Wochen '+tg,monatlich:'Monatlich am '+(+t.start.slice(8))+'.'}[t.wdh];
+ return w+' · '+t.von+'–'+t.bis+(t.wdh!=='einmal'?' · '+dshort(t.start)+'–'+dlong(t.ende):'');
+}
+function countOcc(t){
+ if(t.wdh==='einmal')return 1;
+ let n=0;const e=t.ende||t.start;
+ for(let d=new Date(t.start+'T00:00:00'),i=0;i<800;i++,d=addD(d,1)){const ds=iso(d);if(ds>e)break;const inf=dayInfo(ds);if(occurs(t,ds,!!(inf.feiertag||inf.ferien)))n++}
+ return n;
+}
+function vStundenplan(){
+ const now=new Date();now.setHours(0,0,0,0);
+ const td=iso(now),mon=addD(now,-wdOf(td)+7*V.week),fri=addD(mon,4);
+ let h=`<div class="ph"><div><h1>Stundenplan</h1><div class="sub">${V.spv==='liste'?S.termine.length+(S.termine.length===1?' Eintrag':' Einträge'):dshort(iso(mon))+'–'+dlong(iso(fri))}</div></div>
+ <div class="acts">${V.spv==='liste'?'':`<button onclick="go({week:${V.week-1}})">‹ Vorherige</button><button onclick="go({week:0})">Diese Woche</button><button onclick="go({week:${V.week+1}})">Nächste ›</button>`}<button class="pri" onclick="terminModal()">+ Eintrag</button></div></div>
+ <div class="seg"><button class="${V.spv!=='liste'?'on':''}" onclick="go({spv:'woche'})">Woche</button><button class="${V.spv==='liste'?'on':''}" onclick="go({spv:'liste'})">Alle Einträge</button></div>`;
+ if(V.spv==='liste'){
+  const l=S.termine.slice().sort((a,b)=>a.start.localeCompare(b.start)||a.von.localeCompare(b.von));
+  h+=`<div class="card">${l.length?l.map(t=>`<div class="row click" onclick="terminModal('${t.id}')"><span><b>${lesLabel({k:t.kid?kl(t.kid):null,titel:t.titel,raum:t.raum})}</b><div class="sub">${wdhText(t)} · ${countOcc(t)} ${countOcc(t)===1?'Termin':'Termine'}${(t.aus||[]).length?', davon '+t.aus.length+' einzeln abgesagt':''}</div></span><span class="tag">Bearbeiten</span></div>`).join(''):'<div class="sub">Noch keine Einträge. Lege mit „+ Eintrag“ deine Stunden an, z. B. jeden Dienstag 08:00–09:30 bis zum Halbjahresende.</div>'}</div>`;
+  if(Object.keys(S.plan).length)h+=`<div class="sub" style="margin-top:10px">Dazu kommt das Stundenraster aus den <button class="crumb" onclick="go({tab:'mehr'})">Einstellungen</button>, das jede Woche gleich ist.</div>`;
+  return h;
+ }
+ const days=[0,1,2,3,4].map(i=>{const ds=iso(addD(mon,i)),inf=dayInfo(ds);return{ds:ds,inf:inf,ls:lessonsOn(ds)}});
+ const all=[].concat(...days.map(d=>d.ls));
+ const t0=Math.min(7*60+30,...all.map(l=>minOf(l.von)))-(all.length?15:0),t1=Math.max(14*60,...all.map(l=>minOf(l.bis)))+15;
+ const a=Math.floor(t0/60)*60,b=Math.ceil(t1/60)*60,PX=1.15,H=(b-a)*PX,nowM=new Date().getHours()*60+new Date().getMinutes();
+ const hrs=[];for(let m=a;m<=b;m+=60)hrs.push(m);
+ h+=`<div class="ttw"><div class="tt"><div></div>${days.map((d,i)=>`<div class="tt-hd ${d.ds===td?'today':''}"><span>${DAYS[i]} <span class="sub">${dshort(d.ds)}</span></span><button class="ghost" title="Eintrag an diesem Tag" onclick="terminModal(null,'${d.ds}')">+</button></div>`).join('')}
+ <div class="tt-ax" style="height:${H}px">${hrs.map(m=>`<span style="top:${(m-a)*PX}px">${String(m/60).padStart(2,'0')}:00</span>`).join('')}</div>`;
+ days.forEach(d=>{
+  const free=d.inf.feiertag||d.inf.ferien,lanes=[];
+  d.ls.forEach(l=>{let k=lanes.findIndex(e=>e<=minOf(l.von));if(k<0){k=lanes.length;lanes.push(0)}lanes[k]=minOf(l.bis);l.lane=k});
+  const n=Math.max(1,lanes.length);
+  h+=`<div class="tt-c ${d.inf.feiertag?'fe':d.inf.ferien?'fr':''}" style="height:${H}px">${hrs.map(m=>`<i style="top:${(m-a)*PX}px"></i>`).join('')}${free?`<span class="free tag ${d.inf.feiertag?'fe':'fr'}">${esc(free)}</span>`:''}
+  ${d.ls.map(l=>{const top=(minOf(l.von)-a)*PX,ht=Math.max(30,(minOf(l.bis)-minOf(l.von))*PX-2),now=d.ds===td&&nowM>=minOf(l.von)&&nowM<=minOf(l.bis),pl=S.planung[l.key];
+   return `<div class="tt-b ${now?'now':''} ${l.t?'':'ras'} ${ht<44?'sm':''}" style="top:${top}px;height:${ht}px;left:calc(${l.lane*100/n}% + 3px);width:calc(${100/n}% - 6px)" onclick="lesModal('${d.ds}','${l.key}')" title="${l.von}–${l.bis} ${l.k?esc(l.k.name+' '+l.k.fach):esc(l.titel||'')}">
+   <b>${l.k?esc(l.k.name):esc(l.titel||'Termin')}</b><span>${l.von}–${l.bis}</span>${l.k?`<span>${esc(l.k.fach)}${l.titel?' · '+esc(l.titel):''}</span>`:''}${l.raum?`<span>${esc(l.raum)}</span>`:''}${pl?`<span>📝 ${esc(pl)}</span>`:''}</div>`}).join('')}</div>`;
+ });
+ return h+`</div></div><div class="sub" style="margin-top:10px">Stunde antippen für die Planung. Gestrichelte Stunden kommen aus dem Stundenraster in den Einstellungen.</div>`;
+}
+/* Eine Stunde: Planung und Aktionen */
+function lesModal(ds,key){
+ const l=lessonsOn(ds).find(x=>x.key===key);if(!l)return;const t=l.t;
+ modal(`<h2>${lesLabel(l)}</h2><div class="sub">${WT7[wdOf(ds)]}, ${dlong(ds)} · ${l.von}–${l.bis}${t?' · '+wdhText(t).split(' · ')[0]:' · Stundenraster'}</div>
+ <label>Was ist geplant?<textarea class="grow" oninput="S.planung['${key}']=this.value;save()">${esc(S.planung[key]||'')}</textarea></label>
+ <div class="acts" style="margin-top:12px">${l.k?`<button onclick="closeModal();go({tab:'klassen',klasse:'${l.k.id}',ktab:'sitz',schueler:null})">Sitzplan</button><button onclick="closeModal();go({tab:'klassen',klasse:'${l.k.id}',ktab:'schueler',schueler:null})">Klasse</button>`:''}
+ ${t?(t.wdh!=='einmal'?`<button onclick="occAus('${t.id}','${ds}')">Nur am ${dshort(ds)} ausfallen lassen</button>`:'')+`<button onclick="terminModal('${t.id}')">${t.wdh==='einmal'?'Bearbeiten':'Serie bearbeiten'}</button>`:`<button onclick="closeModal();go({tab:'mehr'})">Stundenraster bearbeiten</button>`}</div>
+ <div class="btns"><button class="pri" onclick="closeModal();render()">Fertig</button></div>`);
+}
+function occAus(id,ds){const t=S.termine.find(x=>x.id===id);t.aus=(t.aus||[]).concat([ds]);save();closeModal();render()}
+function terminModal(id,pre){
+ const t=id?S.termine.find(x=>x.id===id):null,ds=pre||iso(new Date());
+ const o=t||{kid:'',titel:'',raum:'',von:'08:00',bis:'08:45',wdh:'woechentlich',tage:[wdOf(ds)],start:ds,ende:hjEnde(ds),ferien:true,aus:[]};
+ modal(`<h2>${t?'Eintrag bearbeiten':'Neuer Eintrag'}</h2>
+ <div class="two"><label>Klasse<select id="tm_k" onchange="tmUpd()"><option value="">– keine (sonstiger Termin) –</option>${S.klassen.map(k=>`<option value="${k.id}" ${o.kid===k.id?'selected':''}>${esc(k.name)} · ${esc(k.fach)}</option>`).join('')}</select></label><label>Titel<input id="tm_t" value="${esc(o.titel)}" placeholder="z. B. Aufsicht, Konferenz" oninput="tmUpd()"></label></div>
+ <div class="two"><label>Von<input type="time" id="tm_v" value="${o.von}" onchange="tmUpd()"></label><label>Bis<input type="time" id="tm_b" value="${o.bis}" onchange="tmUpd()"></label></div>
+ <div class="two"><label>Raum<input id="tm_r" value="${esc(o.raum)}"></label><label>Wiederholung<select id="tm_w" onchange="tmUpd()">${WDH.map(w=>`<option value="${w[0]}" ${o.wdh===w[0]?'selected':''}>${w[1]}</option>`).join('')}</select></label></div>
+ <div id="tm_tg" class="tmtg">${WT7.slice(0,6).map((d,i)=>`<label class="chk"><input type="checkbox" value="${i}" ${(o.tage||[]).includes(i)?'checked':''} onchange="tmUpd()"> ${d}</label>`).join('')}</div>
+ <div class="two"><label id="tm_sl"><span>Beginn</span><input type="date" id="tm_s" value="${o.start}" onchange="tmUpd()"></label><label id="tm_el">Ende<input type="date" id="tm_e" value="${o.ende||''}" onchange="tmUpd()"></label></div>
+ <div class="acts" id="tm_q" style="margin-top:8px"><button onclick="$('#tm_e').value=hjEnde($('#tm_s').value);tmUpd()">bis Halbjahresende</button><button onclick="$('#tm_e').value=sjEnde($('#tm_s').value);tmUpd()">bis Schuljahresende</button></div>
+ <label class="chk" id="tm_fl"><input type="checkbox" id="tm_f" ${o.ferien!==false?'checked':''} onchange="tmUpd()"> In Ferien und an Feiertagen fällt der Eintrag aus</label>
+ ${t&&(t.aus||[]).length?`<div class="sub" style="margin-top:8px">Einzeln abgesagt: ${t.aus.slice().sort().map(dshort).join(', ')} <button class="ghost" onclick="terminAusReset('${t.id}')">wieder einplanen</button></div>`:''}
+ <div class="sub" id="tm_n" style="margin-top:10px"></div>
+ <div class="btns">${t?`<button class="dng" onclick="terminDel('${t.id}')">Löschen</button>`:''}<button onclick="closeModal()">Abbrechen</button><button class="pri" onclick="terminSave('${t?t.id:''}')">Speichern</button></div>`);
+ tmUpd();
+}
+function tmRead(){return{kid:$('#tm_k').value,titel:$('#tm_t').value.trim(),raum:$('#tm_r').value.trim(),von:$('#tm_v').value,bis:$('#tm_b').value,wdh:$('#tm_w').value,tage:Array.from(document.querySelectorAll('#tm_tg input')).filter(x=>x.checked).map(x=>+x.value),start:$('#tm_s').value,ende:$('#tm_e').value,ferien:$('#tm_f').checked}}
+function tmErr(o){
+ if(!o.kid&&!o.titel)return 'Bitte eine Klasse wählen oder einen Titel eingeben.';
+ if(!o.von||!o.bis||o.bis<=o.von)return 'Die Endzeit muss nach der Anfangszeit liegen.';
+ if(!o.start)return 'Bitte ein Datum wählen.';
+ if(o.wdh!=='einmal'){if(!o.ende)return 'Bitte ein Ende wählen, z. B. das Halbjahresende.';if(o.ende<o.start)return 'Das Ende liegt vor dem Beginn.';if((o.wdh==='woechentlich'||o.wdh==='zweiwoechentlich')&&!o.tage.length)return 'Bitte mindestens einen Wochentag wählen.'}
+ return '';
+}
+function tmUpd(){
+ const o=tmRead(),w=o.wdh,e=tmErr(o),n=$('#tm_n');
+ $('#tm_tg').style.display=w==='woechentlich'||w==='zweiwoechentlich'?'':'none';
+ ['#tm_el','#tm_q','#tm_fl'].forEach(x=>{$(x).style.display=w==='einmal'?'none':''});
+ $('#tm_sl span').textContent=w==='einmal'?'Datum':'Beginn';
+ n.style.color=e?'var(--bad)':'';n.textContent=e||(w==='einmal'?'Ein einzelner Termin.':'Ergibt '+countOcc(Object.assign({aus:[]},o))+' Termine im gewählten Zeitraum.');
+}
+function terminSave(id){
+ const o=tmRead(),e=tmErr(o);if(e){tmUpd();return}
+ if(o.wdh!=='woechentlich'&&o.wdh!=='zweiwoechentlich')o.tage=[];
+ if(id)Object.assign(S.termine.find(x=>x.id===id),o);else S.termine.push(Object.assign({id:uid(),aus:[]},o));
+ save();closeModal();render();
+}
+function terminDel(id){ask('Eintrag mit allen Terminen löschen?',()=>{S.termine=S.termine.filter(x=>x.id!==id);save();render()})}
+function terminAusReset(id){S.termine.find(x=>x.id===id).aus=[];save();terminModal(id)}
 
 /* ---------- Mehr ---------- */
 function vMehr(){
  const th=getTheme();
- let h=`<div class="ph"><div><h1>Einstellungen</h1></div></div><div class="g2"><div class="card"><h2>Stundenplan</h2><div style="overflow-x:auto"><table class="pl"><tr><th></th>${DAYS.map(x=>`<th>${x}</th>`).join('')}</tr>`;
+ let h=`<div class="ph"><div><h1>Einstellungen</h1></div></div><div class="g2"><div class="card"><h2>Stundenraster</h2><div class="sub" style="margin-bottom:8px">Jede Woche gleich. Stunden mit eigener Uhrzeit, Wiederholung und Zeitraum legst du unter „Stundenplan“ an.</div><div style="overflow-x:auto"><table class="pl"><tr><th></th>${DAYS.map(x=>`<th>${x}</th>`).join('')}</tr>`;
  S.zeiten.forEach((z,i)=>{
   h+=`<tr><td><b>${i+1}.</b><br><input type="time" value="${z[0]}" onchange="S.zeiten[${i}][0]=this.value;save()"><input type="time" value="${z[1]}" onchange="S.zeiten[${i}][1]=this.value;save()"></td>`;
   for(let t=0;t<5;t++)h+=`<td><select onchange="setPlan(${t},${i},this.value)"><option value="">–</option>${S.klassen.map(k=>`<option value="${k.id}" ${S.plan[t+'-'+i]===k.id?'selected':''}>${esc(k.name)}</option>`).join('')}</select></td>`;
@@ -1115,7 +1233,7 @@ function fachAdd(){const v=$('#f_n').value.trim();if(!v||S.set.faecher.includes(
 function fachRen(i,v){v=v.trim();const o=S.set.faecher[i];if(!v||v===o){render();return}S.set.faecher[i]=v;S.klassen.forEach(k=>{if(k.fach===o)k.fach=v});save();render()}
 function fachDel(i){const f=S.set.faecher[i],n=S.klassen.filter(k=>k.fach===f).length;ask(n?`„${f}“ löschen? ${n} Klasse(n) behalten das Fach.`:`„${f}“ löschen?`,()=>{S.set.faecher.splice(i,1);save();render()})}
 function setList(k,v){S.set[k]=v.split(',').map(x=>x.trim()).filter(Boolean);save()}
-function emptyState(){const d=seed();return{klassen:[],schueler:[],plan:{},planung:{},sitz:{},zeiten:d.zeiten,set:Object.assign({},d.set,{letzterExport:null})}}
+function emptyState(){const d=seed();return{klassen:[],schueler:[],plan:{},planung:{},termine:[],sitz:{},zeiten:d.zeiten,set:Object.assign({},d.set,{letzterExport:null})}}
 function exportJ(){
  S.set.letzterExport=iso(new Date());save();
  const b=new Blob([JSON.stringify(Object.assign({},S,{fotos:FOTO}),null,1)],{type:'application/json'}),a=document.createElement('a');
