@@ -139,14 +139,20 @@ textarea.zg{min-height:140px}
 .fvp{position:relative;width:min(300px,100%);aspect-ratio:1;margin:0 auto 14px;overflow:hidden;border-radius:18px;background:var(--nb);touch-action:none;cursor:grab;border:1px solid var(--bd)}
 .fvp img{max-width:none;user-select:none;pointer-events:none}
 .head{display:flex;align-items:center;gap:16px}
-.tb{display:grid;grid-template-columns:minmax(0,1fr) 100px 100px 130px 80px 170px;align-items:center;gap:8px;padding:11px 8px;border-top:1px solid var(--bd)}
+.tb{display:grid;grid-template-columns:minmax(210px,1fr) 96px 96px 120px 176px;align-items:center;gap:8px;padding:11px 8px;border-top:1px solid var(--bd)}
 .tb.hd{border-top:none;font-size:12px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
 .tb.w{grid-template-columns:minmax(0,1fr) 140px 90px 90px 120px 80px 170px}
 .mini{padding:4px 10px;font-size:13px;border-radius:8px}
 .rowact{display:flex;gap:6px;justify-content:flex-end}
-.tb.rw{cursor:pointer;border-radius:10px}
-.tb.kl{grid-template-columns:minmax(0,1fr) 120px 110px 110px 120px 170px}
+.tb.rw{cursor:pointer;border-radius:10px;padding-top:12px;padding-bottom:12px}
+.nm{display:flex;align-items:center;gap:12px;min-width:0}
+.nm>div{min-width:0}
+.nm1,.nm2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm2{margin-top:2px}
+.nm1 .tag{margin-left:4px}
+.tb.kl{grid-template-columns:minmax(190px,1fr) 96px 96px 96px 120px 176px}
 @media(max-width:800px){.tb.kl{grid-template-columns:minmax(0,1fr) 64px 56px 56px}}
+@media(max-width:1180px) and (min-width:801px){.tb{grid-template-columns:minmax(170px,1fr) 80px 80px 104px 162px}.tb.kl{grid-template-columns:minmax(150px,1fr) 64px 76px 76px 96px 162px}}
 .tb.nt{grid-template-columns:minmax(0,1fr) 70px 110px 200px}
 .tb.nt>*:first-child{overflow-wrap:anywhere}
 .tb.nt .tag{white-space:normal}
@@ -532,9 +538,9 @@ function sListe(){
  const t=iso(new Date());
  const ss=S.schueler.filter(s=>(!V.qk||s.klasse===V.qk)&&matchS(s,V.q||'')).sort((a,b)=>a.nn.localeCompare(b.nn,'de')||a.vn.localeCompare(b.vn,'de'));
  if(ansicht('schueler')==='kachel')return ss.length?ss.map(s=>sKachel(s,true)).join(''):'<div class="sub">Keine SchülerInnen gefunden.</div>';
- let h=`<div class="tb hd w"><div>Name</div><div>Klasse</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote</div><div>Status</div><div></div></div>`;
- h+=ss.length?ss.map(s=>{const st=stats(s),k=kl(s.klasse),kr=s.krank.includes(t);
-  return `<div class="tb rw w" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}',back:'alle'})"><div style="display:flex;align-items:center;gap:10px">${avHtml(s,'sm')}<span><b>${esc(s.nn)}</b>, ${esc(s.vn)}</span></div><div><span class="tag">${esc(k.name)} · ${esc(k.fach)}</span></div><div>${num(st.a)}</div><div>${num(st.b)}</div><div><b>${zn(st.g)}</b> <span class="sub">(${num(st.g)})</span></div><div>${kr?'<span class="tag bad">krank</span>':''}</div><div class="rowact"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`}).join(''):'<div class="sub" style="padding:14px 8px">Keine SchülerInnen gefunden.</div>';
+ let h=`<div class="tb hd"><div>Name</div><div>Schriftl. Ø</div><div>Mündl. Ø</div><div>Zeugnisnote</div><div></div></div>`;
+ h+=ss.length?ss.map(s=>{const st=stats(s),k=kl(s.klasse),sub=[k?esc(k.name)+' · '+esc(k.fach):'',s.betrieb?esc(s.betrieb):''].filter(Boolean).join(' · ');
+  return `<div class="tb rw" onclick="go({tab:'klassen',klasse:'${s.klasse}',schueler:'${s.id}',back:'alle'})">${nmCell(s,sub)}${notenCells(st)}${rowAct(s)}</div>`}).join(''):'<div class="sub" style="padding:14px 8px">Keine SchülerInnen gefunden.</div>';
  return h;
 }
 function sUpdate(){const l=$('#sl');if(l)l.innerHTML=sListe();const c=$('#sc');if(c)c.textContent=cnt()}
@@ -597,8 +603,8 @@ const ansSeg=(k,st)=>`<div class="seg"${st||''}><button class="${ansicht(k)==='l
 function klStats(k){const t=iso(new Date()),ss=S.schueler.filter(s=>s.klasse===k.id),st=ss.map(stats),a=f=>avg(st.map(x=>x[f]).filter(x=>x!=null));return{n:ss.length,kr:ss.filter(s=>s.krank.includes(t)).length,a:a('a'),b:a('b'),g:a('g')}}
 function klListe(){
  if(!S.klassen.length)return '<div class="sub">Noch keine Klassen.</div>';
- return `<div class="card"><div class="tb hd kl"><div>Klasse</div><div>Schüler</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote Ø</div><div></div></div>`+S.klassen.map(k=>{const x=klStats(k);
-  return `<div class="tb rw kl" onclick="go({klasse:'${k.id}',ktab:'schueler'})"><div><b>${esc(k.name)}</b> <span class="sub">${esc(k.fach)}</span></div><div>${x.n}${x.kr?` <span class="tag bad">${x.kr} krank</span>`:''}</div><div>${num(x.a)}</div><div>${num(x.b)}</div><div><b>${num(x.g)}</b></div><div class="rowact"><button class="mini" onclick="event.stopPropagation();klasseModal('${k.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delKlasse('${k.id}')">Löschen</button></div></div>`}).join('')+'</div>';
+ return `<div class="card"><div class="tb hd kl"><div>Klasse</div><div>Schüler</div><div>Schriftl. Ø</div><div>Mündl. Ø</div><div>Zeugnis Ø</div><div></div></div>`+S.klassen.map(k=>{const x=klStats(k);
+  return `<div class="tb rw kl" onclick="go({klasse:'${k.id}',ktab:'schueler'})"><div class="nm"><div><div class="nm1"><b>${esc(k.name)}</b></div><div class="sub nm2">${esc(k.fach)}</div></div></div><div>${x.n}${x.kr?`<div class="sub" style="color:var(--bad)">${x.kr} krank</div>`:''}</div><div>${num(x.a)}</div><div>${num(x.b)}</div><div><b>${num(x.g)}</b></div><div class="rowact"><button class="mini" onclick="event.stopPropagation();klasseModal('${k.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delKlasse('${k.id}')">Löschen</button></div></div>`}).join('')+'</div>';
 }
 function sKachel(s,alle){
  const st=stats(s),k=kl(s.klasse),kr=s.krank.includes(iso(new Date())),info=[alle&&k?esc(k.name)+' · '+esc(k.fach):'',s.betrieb?esc(s.betrieb):''].filter(Boolean).join(' · ');
@@ -606,6 +612,9 @@ function sKachel(s,alle){
  <div class="row" style="margin-top:12px"><span class="sub">Schriftlich Ø</span><b>${num(st.a)}</b></div><div class="row"><span class="sub">Mündlich Ø</span><b>${num(st.b)}</b></div><div class="row"><span class="sub">Zeugnisnote</span><b>${zn(st.g)} <span class="sub">(${num(st.g)})</span></b></div>
  <div class="acts" style="margin-top:10px"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`;
 }
+function nmCell(s,sub){const kr=s.krank.includes(iso(new Date()));return `<div class="nm">${avHtml(s,'sm')}<div><div class="nm1"><b>${esc(s.nn)}</b>, ${esc(s.vn)}${kr?' <span class="tag bad">krank</span>':''}</div>${sub?`<div class="sub nm2">${sub}</div>`:''}</div></div>`}
+const notenCells=st=>`<div>${num(st.a)}</div><div>${num(st.b)}</div><div><b>${zn(st.g)}</b> <span class="sub">(${num(st.g)})</span></div>`;
+const rowAct=s=>`<div class="rowact"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div>`;
 function vKlassen(){
  if(V.schueler&&sc(V.schueler))return vSchueler(sc(V.schueler));
  if(V.klasse&&kl(V.klasse))return vKlasse(kl(V.klasse));
@@ -629,8 +638,8 @@ function vKlasse(k){
   return h+`<div class="sub" style="margin-bottom:10px">Tisch ziehen zum Verschieben, antippen zum Bearbeiten und für die mündliche Note. „mündlich Ø“ ist der Durchschnitt der mündlichen Noten, ausgegraute Tische sind krank gemeldet. Jede neue Note erscheint sofort in der Schüler- und Klassenübersicht und fließt in die Zeugnisnote (${S.set.gew}/${100-S.set.gew} schriftlich/mündlich) ein.</div><div id="sitz" class="sitz" data-k="${k.id}">${desks.map(deskHtml).join('')}</div>`;
  }
  if(ansicht('klasse')==='kachel')return h+(ss.length?`<div class="cards">${ss.map(s=>sKachel(s,false)).join('')}</div>`:'<div class="sub">Noch keine Schüler.</div>');
- h+=`<div class="card"><div class="tb hd"><div>Name</div><div>Schriftlich Ø</div><div>Mündlich Ø</div><div>Zeugnisnote</div><div>Status</div><div></div></div>`;
- h+=ss.length?ss.map(s=>{const st=stats(s),kr=s.krank.includes(t);return `<div class="tb rw" onclick="go({schueler:'${s.id}'})"><div style="display:flex;align-items:center;gap:10px">${avHtml(s,'sm')}<span><b>${esc(s.nn)}</b>, ${esc(s.vn)}</span></div><div>${num(st.a)}</div><div>${num(st.b)}</div><div><b>${zn(st.g)}</b> <span class="sub">(${num(st.g)})</span></div><div>${kr?'<span class="tag bad">krank</span>':''}</div><div class="rowact"><button class="mini" onclick="event.stopPropagation();schuelerModal('${s.klasse}','${s.id}')">Bearbeiten</button><button class="mini dng" onclick="event.stopPropagation();delSchueler('${s.id}')">Löschen</button></div></div>`}).join(''):'<div class="sub" style="padding:12px 8px">Noch keine Schüler.</div>';
+ h+=`<div class="card"><div class="tb hd"><div>Name</div><div>Schriftl. Ø</div><div>Mündl. Ø</div><div>Zeugnisnote</div><div></div></div>`;
+ h+=ss.length?ss.map(s=>`<div class="tb rw" onclick="go({schueler:'${s.id}'})">${nmCell(s,s.betrieb?esc(s.betrieb):'')}${notenCells(stats(s))}${rowAct(s)}</div>`).join(''):'<div class="sub" style="padding:12px 8px">Noch keine Schüler.</div>';
  return h+`</div>`;
 }
 function cloneS(s,noten){const c=JSON.parse(JSON.stringify(s));c.id=uid();if(FOTO[s.id])fotoPut(c.id,Object.assign({},FOTO[s.id]));c.krank=[];c.unent=[];if(noten)c.noten.forEach(n=>{n.id=uid()});else c.noten=[];return c}
