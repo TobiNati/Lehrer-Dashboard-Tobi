@@ -807,8 +807,10 @@ function wordsToLines(ws,gap){
 }
 const imNorm=s=>String(s||'').toLowerCase().replace(/[.:]/g,'').trim();
 function headField(c){const t=imNorm(c);if(!t||t.length>40||/@|\d{2}/.test(t))return null;for(const [f,r] of IMH)if(r.test(t))return f;return null}
+/* Einzelne Wörter aus einer Zeile mit Positionen entfernen (z. B. „Seite 1“ neben jeder Zeile) */
+function stripW(l,rx){if(!l.pos)return l;const pos=l.pos.filter(c=>!rx.test(c.t.trim())),ws=(l.ws||[]).filter(w=>!rx.test(w.t.trim()));return Object.assign({},l,{pos:pos,ws:ws,cells:pos.map(c=>c.t)})}
 function imBuild(src){
- const lines=src.lines.filter(l=>l.cells.some(c=>c.trim()));
+ const lines=src.lines.map(l=>stripW(l,/^seite\s*\d+(\s*von\s*\d+)?$/i)).filter(l=>l.cells.some(c=>c.trim()));
  if(!lines.length)return imStat('In der Datei wurde kein Text gefunden. Bei Scans hilft „Texterkennung erzwingen“.');
  /* Klassenname aus Überschrift oder Dateiname */
  let hint=null;
@@ -831,7 +833,7 @@ function imBuild(src){
   }
   map=H.cells.map(headField).map(f=>f||'');
   if(map.includes('name')&&map.includes('vn'))map=map.map(f=>f==='name'?'nn':f);
-  const body=lines.slice(hi+1).filter(l=>l.cells.join('|')!==H.cells.join('|')&&!(l.cells.filter(c=>headField(c)).length>=2));
+  const body=lines.slice(hi+1).filter(l=>l.cells.join('|')!==H.cells.join('|')&&!(l.cells.filter(c=>headField(c)).length>=2)).map(l=>stripW(l,/^e-?mail$/i)).filter(l=>l.cells.some(c=>c.trim()));
   const bnd=H.pos?colBounds(H,body):null;
   rows=body.map(l=>{const a=bnd&&l.ws?alignTo(bnd,l.ws):pad(l.cells,H.cells.length);return {cells:a,lc:a.lc||[],hint:l.hint,y:l.ws?l.ws[0].y:null,h:l.h}});
   IM.head=H.cells;
