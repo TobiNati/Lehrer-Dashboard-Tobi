@@ -660,9 +660,9 @@ function loadJS(u){return _js[u]=_js[u]||new Promise((res,rej)=>{const s=documen
 const IMF=[['','ignorieren'],['nn','Nachname'],['vn','Vorname'],['name','Name (Nach- und Vorname)'],['klasse','Klasse'],['betrieb','Betrieb'],['mail','E-Mail'],['tel','Telefon']];
 const IMC=[['nn','Nachname'],['vn','Vorname'],['klasse','Klasse'],['betrieb','Betrieb'],['mail','E-Mail'],['tel','Telefon']];
 /* Reihenfolge zählt: „Telefon Betrieb“ ist Telefon, „E-Mail Ausbilder“ ist E-Mail, „Ausbildungsberuf“ wird ignoriert */
-const IMH=[['',/^(nr\.?|lfd\.?( nr\.?)?|#|pos\.?|geschlecht|m\/w|konf|religion|staat|nation|bemerk)/],['mail',/mail/],['tel',/tel|fon|handy|mobil|notfall|phone/],['betrieb',/betrieb|firma|unternehmen|arbeitgeber|ausbildungsst|praktikum/],['',/geb|geburt|plz|postleitzahl|^(wohn)?ort\b|^stadt|stra(ss|ß)e|^str\.?$|anschrift|adresse|beruf|eltern|erziehungs|mutter|vater/],['klasse',/^klasse|^kl\.?$|^lerngruppe|^kurs/],['vn',/vorname|rufname/],['nn',/nachname|familienname|zuname/],['name',/^(name|schüler(in|innen)?|schülername|name des schülers|auszubildende[r]?|azubi)\b/]];
+const IMH=[['',/^(nr\.?|lfd\.?( nr\.?)?|#|pos\.?|geschlecht|m\/w|konf|religion|staat|nation|bemerk)|fax/],['mail',/mail/],['tel',/tel|fon|handy|mobil|notfall|phone/],['betrieb',/betrieb|firma|unternehmen|arbeitgeber|ausbildungsst|praktikum/],['',/geb|geburt|plz|postleitzahl|^(wohn)?ort\b|^stadt|stra(ss|ß)e|^str\.?$|anschrift|adresse|beruf|eltern|erziehungs|mutter|vater/],['klasse',/^klasse|^kl\.?$|^lerngruppe|^kurs/],['vn',/vorname|rufname/],['nn',/nachname|familienname|zuname/],['name',/^(name|schüler(in|innen)?|schülername|name des schülers|auszubildende[r]?|azubi)\b/]];
 const RX={date:/^\d{1,2}\.\s?\d{1,2}\.\s?(\d{2}|\d{4})$/,mail:/^\S+@\S+\.\S+$/,tel:/^(\+|0|\()[\d\s\/()\-.]{5,}$/,plz:/^\d{5}$/,plzort:/^\d{5}\s+\D/,str:/\D{3,}\s*\d+\s*[a-z]?(\s*[-\/]\s*\d+[a-z]?)?$/i,
- klasse:/^(\d{1,2}\s?[a-z]{0,2}|ef|q1|q2|e1|e2)$/i,name:/^[A-ZÄÖÜÉ][\p{L}'\-]+(\s+[\p{L}'\-]+)*$/u,firma:/\b(gmbh|ag|kg|ohg|ug|mbh|gbr|e\.\s?k\.?|e\.\s?v\.?|co\.?|& co)\b|betrieb|werk|handel|service|bau\b/i,junk:/seite\s*\d|^\s*(klassenliste|schülerliste|schuljahr|stand\b|gedruckt|druckdatum|summe|anzahl|gesamt|unterschrift)/i};
+ klasse:/^(\d{1,2}\s?[a-z]{0,2}|[a-z]{1,6}\s?\d{1,4}\s?[a-z]{0,2}|ef|q1|q2|e1|e2)$/i,name:/^[A-ZÄÖÜÉ][\p{L}'\-]+(\s+[\p{L}'\-]+)*$/u,firma:/\b(gmbh|ag|kg|ohg|ug|mbh|gbr|e\.\s?k\.?|e\.\s?v\.?|co\.?|& co)\b|betrieb|werk|handel|service|bau\b/i,junk:/seite\s*\d|^\s*(klassenliste|schülerliste|schuljahr|stand\b|gedruckt|druckdatum|summe|anzahl|gesamt|unterschrift)/i};
 let IM=null;
 function importModal(kid){
  IM={kid:kid||null};
@@ -740,16 +740,17 @@ function wordsToLines(ws,gap){
   return {cells:cells.map(c=>c.t),pos:cells,ws:l.ws,h:l.h}});
 }
 const imNorm=s=>String(s||'').toLowerCase().replace(/[.:]/g,'').trim();
-function headField(c){const t=imNorm(c);if(!t||t.length>40)return null;for(const [f,r] of IMH)if(r.test(t))return f;return null}
+function headField(c){const t=imNorm(c);if(!t||t.length>40||/@|\d{2}/.test(t))return null;for(const [f,r] of IMH)if(r.test(t))return f;return null}
 function imBuild(src){
  const lines=src.lines.filter(l=>l.cells.some(c=>c.trim()));
  if(!lines.length)return imStat('In der Datei wurde kein Text gefunden. Bei Scans hilft „Texterkennung erzwingen“.');
  /* Klassenname aus Überschrift oder Dateiname */
  let hint=null;
- for(const l of lines.slice(0,15)){const m=l.cells.join(' ').match(/klasse\s*:?\s*(\d{1,2}\s?[a-z]{0,2}|ef|q1|q2)\b/i);if(m){hint=m[1].replace(/\s/g,'');break}}
- if(!hint&&IM.file){const m=IM.file.match(/(?:^|[^\d])(\d{1,2}[a-z]{1,2}|ef|q1|q2)(?:[^a-z]|$)/i);if(m)hint=m[1]}
- /* Kopfzeile: erste Zeile mit mindestens zwei erkannten Spalten */
- let hi=lines.findIndex(l=>l.cells.filter(c=>headField(c)!=null&&headField(c)!=='').length>=2);
+ for(const l of lines.slice(0,15)){const m=l.cells.join(' ').match(/klasse\s*:?\s*([a-z]{0,6}\s?\d{1,4}\s?[a-z]{0,2}|ef|q1|q2)\b/i);if(m){hint=m[1].replace(/\s/g,'');break}}
+ if(!hint&&IM.file){const m=IM.file.replace(/\.[a-z0-9]+$/i,'').match(/(?:^|[^a-z\d])([a-z]{0,6}\d{1,4}[a-z]{0,2}|ef|q1|q2)(?:[^a-z\d]|$)/i);if(m)hint=/^[a-z]+\d/i.test(m[1])?m[1].toUpperCase():m[1]}
+ /* Kopfzeile: die Zeile mit den meisten erkannten Spalten, mindestens zwei (ein Titel wie „Klasse: 8c“ zählt weniger) */
+ const hs=lines.map(l=>l.cells.filter(c=>headField(c)).length),hm=Math.max(0,...hs);
+ let hi=hm>=2?hs.indexOf(hm):-1;
  let rows,map;
  if(hi>=0){
   let H=lines[hi];
@@ -764,7 +765,9 @@ function imBuild(src){
   }
   map=H.cells.map(headField).map(f=>f||'');
   if(map.includes('name')&&map.includes('vn'))map=map.map(f=>f==='name'?'nn':f);
-  rows=lines.slice(hi+1).filter(l=>l.cells.join('|')!==H.cells.join('|')&&!(l.cells.filter(c=>headField(c)).length>=2)).map(l=>({cells:H.pos&&l.ws?alignTo(H.pos,l.ws,l.h):pad(l.cells,H.cells.length),hint:l.hint,y:l.ws?l.ws[0].y:null,h:l.h}));
+  const body=lines.slice(hi+1).filter(l=>l.cells.join('|')!==H.cells.join('|')&&!(l.cells.filter(c=>headField(c)).length>=2));
+  const bnd=H.pos?colBounds(H,body):null;
+  rows=body.map(l=>({cells:bnd&&l.ws?alignTo(bnd,l.ws):pad(l.cells,H.cells.length),hint:l.hint,y:l.ws?l.ws[0].y:null,h:l.h}));
   IM.head=H.cells;
  }else{
   const n=Math.max(...lines.map(l=>l.cells.length));
@@ -774,8 +777,14 @@ function imBuild(src){
  imRecs();imPreview();
 }
 const pad=(a,n)=>a.concat(Array(Math.max(0,n-a.length)).fill(''));
-function alignTo(hp,ws,h){
- const b=hp.slice(1).map(c=>c.x0-0.6*h),out=hp.map(()=>[]);
+/* Spaltengrenzen: wo die Einträge unter einer Überschrift wirklich beginnen (oft etwas links davon) */
+function colBounds(H,body){
+ const hp=H.pos,h=H.h,xs=[];body.forEach(l=>(l.pos||[]).forEach(c=>xs.push(c.x0)));
+ return hp.slice(1).map((c,i)=>{const lo=Math.max(hp[i].x0+0.5*h,c.x0-2.5*h),near=xs.filter(x=>x>=lo&&x<=c.x0+0.3*h);
+  return near.length>=2?Math.min(...near)-0.2*h:c.x0-0.6*h});
+}
+function alignTo(b,ws){
+ const out=Array.from({length:b.length+1},()=>[]);
  ws.forEach(w=>{let i=0;while(i<b.length&&w.x0>=b[i])i++;out[i].push(w.t)});
  return out.map(x=>x.join(' '));
 }
@@ -823,6 +832,7 @@ function imRecs(){
   o.klasse=(o.klasse||r.hint||IM.hint||'').replace(/\s/g,'');
   o._y=r.y;o._h=r.h;recs.push(o);
  });
+ recs.forEach(o=>{if(o.betrieb)o.betrieb=o.betrieb.replace(/\s*\b(herr|frau)\.?$/i,'').trim()});
  orph.forEach(x=>{
   const a=recs[x.after-1],b=recs[x.after];let t=a,above=false;
   if(b&&x.y!=null&&b._y!=null&&(!a||Math.abs(b._y-x.y)<Math.abs(x.y-a._y)))t=b,above=true;
